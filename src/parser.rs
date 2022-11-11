@@ -1,8 +1,10 @@
 #![warn(dead_code)]
 
+use std::collections::HashMap;
+use std::error::Error;
 #[derive(Debug)]
 pub struct ChannelInfo {
-    category: CategoryInfo,
+    category: Option<CategoryInfo>,
     channel: String,
     roles: Option<Vec<String>>,
     private: Option<bool>,
@@ -12,7 +14,7 @@ pub struct ChannelInfo {
 impl ChannelInfo {
     pub fn new(category: CategoryInfo, channel: String) -> Self {
         ChannelInfo { 
-            category: category, 
+            category: Some(category), 
             channel: channel, 
             roles: None, 
             private: None}
@@ -48,14 +50,18 @@ impl CategoryInfo {
     }
 }
 
-// TODO make the function recursive so it can be used for channel -commands instead of only category
+pub fn parse_input<'a>(mut input: String) -> Result<HashMap<&'a str, Vec<String>>, &'a str> {
+    let mut collected_data = HashMap::new();
 
-pub fn parse_input(mut input: String) -> Vec<ChannelInfo> {
-    let mut working_category = CategoryInfo::default();
-    let mut channel_data: Vec<ChannelInfo> = Vec::new();
     let sensitive_string = ["-ch", "-cat", "-r", "-p"];
+    let mut parsed_successfully = false;
 
-    while !input.is_empty() {
+    for _num in 0..99 {
+        if input.is_empty() {
+            parsed_successfully = true;
+            break;
+        }
+
         let splitted_data: Vec<String> = input.split(' ').map(|s| s.to_string()).collect();
         let data = &splitted_data[0];
         match data.trim() {
@@ -73,20 +79,20 @@ pub fn parse_input(mut input: String) -> Vec<ChannelInfo> {
                 }
                 category_name = category_name.trim().to_string();
                 input = input.replace(&format!("{category_name} "), "");
-                working_category.update_name(category_name);
+                collected_data.insert("category", vec![category_name]);
             }
 
             "-p" => {
-                input = input.replace(&format!("{data} "), "");
-                working_category.update_private(true);
+                input = input.replacen(&format!("{data} "), "", 1);
+                collected_data.insert("private", vec!["true".to_string()]);
             }
             "-r" => {
-                input = input.replace(&format!("{data} "), "");
+                input = input.replacen(&format!("{data} "), "", 1);
 
                 let mut role_input = String::new();
 
                 for i in 1..splitted_data.len() {
-                    if !splitted_data[i].starts_with("-") {
+                    if !sensitive_string.contains(&splitted_data[i].as_str()) {
                         role_input.push_str(&splitted_data[i]);
                         role_input.push_str(" ");
                     } else {
@@ -108,30 +114,44 @@ pub fn parse_input(mut input: String) -> Vec<ChannelInfo> {
                     }
                 }
                 input = input.replace(&role_input, "").trim().to_string();
-                working_category.update_roles(all_roles)
+                collected_data.insert("roles", all_roles);
             }
             "-ch" => {
-                input = input.replace(&format!("{data} "), "");
+                input = input.replacen(&format!("{data} "), "", 1);
                 let mut channels = Vec::new();
-                for i in 1..splitted_data.len() {
-                    if !sensitive_string.contains(&splitted_data[i].as_str()) {
-                        channels.push(&splitted_data[i])
-                    } else {
-                        break
+                println!("{input}");
+                let mut separated: Vec<String> = input.split(" | ").map(|s| s.to_string()).collect();
+
+                for i in 0..separated.len() {
+                    let split: Vec<&str> = separated[i].split(" ").collect();
+                    if sensitive_string.contains(&split[0]) {
+                        separated.remove(i);
+                        break;
                     }
+                    
                 }
 
-                for channel in channels {
-                    input = input.replace(&format!("{channel}"), "").trim().to_string();
-                    channel_data.push(ChannelInfo::new(working_category.to_owned(), channel.to_string()))
+                let mut channel_input = String::new();
+                for i in 0..separated.len() {
+                    channel_input.push_str(&separated[i]);
+                    if i != separated.len() -1 {
+                        channel_input.push_str(" | ");
+                    } 
+                    
+
+                    println!("{channel_input:?}");
+                    channels.push(separated[i].to_owned())
                 }
+                input = input.replace(&format!("{channel_input}"), "").trim().to_string();
+
+                collected_data.insert("channels", channels);
 
             }
             _ => {}
         }
     }
-    for i in &channel_data {
-        println!("{:?}", i);
+    if !parsed_successfully {
+        return Err("Parse didn't complete properly within 99 loops")
     }
-    channel_data
+    Ok(collected_data)
 }
