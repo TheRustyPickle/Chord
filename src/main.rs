@@ -1,7 +1,8 @@
+mod bot;
 pub mod parser;
+use bot::start_bot;
 
-use parser::*;
-
-fn main() {
-    
+#[tokio::main]
+async fn main() {
+    start_bot().await;
 }
