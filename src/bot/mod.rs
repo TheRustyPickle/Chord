@@ -1,4 +1,5 @@
 pub mod bot;
 pub mod channel_data;
 
-use channel_data::{ChannelInfo, CategoryInfo};
+pub use bot::start_bot;
+use channel_data::{CategoryInfo, ChannelInfo};
