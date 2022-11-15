@@ -7,6 +7,16 @@ pub struct ChannelInfo {
 }
 
 impl ChannelInfo {
+
+    pub fn default() -> Self {
+        ChannelInfo {
+            category: None,
+            channel: String::new(),
+            roles: None,
+            private: None,
+        }
+    }
+
     pub fn new(category: CategoryInfo, channel: String) -> Self {
         ChannelInfo {
             category: Some(category),
