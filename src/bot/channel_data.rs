@@ -1,4 +1,3 @@
-#[derive(Debug)]
 pub struct ChannelInfo {
     category: Option<CategoryInfo>,
     channel: String,
