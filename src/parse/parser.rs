@@ -27,16 +27,19 @@ pub fn parse_input<'a>(mut input: String) -> Result<HashMap<&'a str, Vec<String>
                     }
                 }
                 category_name = category_name.trim().to_string();
-                input = input.replace(&format!("{category_name} "), "");
+                input = input
+                    .replace(&format!("{category_name}"), "")
+                    .trim()
+                    .to_string();
                 collected_data.insert("category", vec![category_name]);
             }
 
             "-p" => {
-                input = input.replacen(&format!("{data} "), "", 1);
+                input = input.replacen(&format!("{data}"), "", 1).trim().to_string();
                 collected_data.insert("private", vec!["true".to_string()]);
             }
             "-r" => {
-                input = input.replacen(&format!("{data} "), "", 1);
+                input = input.replacen(&format!("{data}"), "", 1).trim().to_string();
 
                 let mut role_input = String::new();
 
@@ -66,7 +69,7 @@ pub fn parse_input<'a>(mut input: String) -> Result<HashMap<&'a str, Vec<String>
                 collected_data.insert("roles", all_roles);
             }
             "-ch" => {
-                input = input.replacen(&format!("{data} "), "", 1);
+                input = input.replacen(&format!("{data}"), "", 1).trim().to_string();
                 let mut channels = Vec::new();
                 let mut separated: Vec<String> =
                     input.split(" | ").map(|s| s.to_string()).collect();
@@ -78,6 +81,8 @@ pub fn parse_input<'a>(mut input: String) -> Result<HashMap<&'a str, Vec<String>
                         break;
                     }
                 }
+
+                // TODO do not allow spaces between channel name. use replacen 1
 
                 let mut channel_input = String::new();
                 for i in 0..separated.len() {
