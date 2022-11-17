@@ -1,8 +1,10 @@
-use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::interaction::application_command::{CommandDataOption, CommandDataOptionValue};
-use serenity::model::prelude::command::CommandOptionType;
 use crate::parser::parse_input;
-use crate::channel_data::ChannelInfo;
+use crate::ChannelInfo;
+use serenity::builder::CreateApplicationCommand;
+use serenity::model::prelude::command::CommandOptionType;
+use serenity::model::prelude::interaction::application_command::{
+    CommandDataOption, CommandDataOptionValue,
+};
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
@@ -11,15 +13,20 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         //.dm_permission(false)
         .create_option(|option| {
             option
-            .name("string")
-            .description("command list for channel creation")
-            .kind(CommandOptionType::String)
-            .required(true)
+                .name("string")
+                .description("command list for channel creation")
+                .kind(CommandOptionType::String)
+                .required(true)
         })
 }
 
 pub fn run(options: &[CommandDataOption]) -> (Vec<ChannelInfo>, String) {
-    let resolved =  options.get(0).expect("Some value").resolved.as_ref().expect("Some value");
+    let resolved = options
+        .get(0)
+        .expect("Some value")
+        .resolved
+        .as_ref()
+        .expect("Some value");
     if let CommandDataOptionValue::String(value) = resolved {
         let parsed_data = parse_input(value.to_string()).unwrap();
         let mut detected_text = format!("These data were detected\n");
@@ -49,7 +56,9 @@ pub fn run(options: &[CommandDataOption]) -> (Vec<ChannelInfo>, String) {
 
         (vec![ChannelInfo::default()], detected_text)
     } else {
-        (vec![ChannelInfo::default()], "No value was given. Parsing will happen here".to_string())
+        (
+            vec![ChannelInfo::default()],
+            "No value was given. Parsing will happen here".to_string(),
+        )
     }
-    
 }

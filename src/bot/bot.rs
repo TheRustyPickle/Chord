@@ -1,6 +1,5 @@
+use crate::ChannelInfo;
 use crate::{create, help, start};
-use crate::channel_data::{ChannelInfo};
-
 use serenity::async_trait;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
@@ -8,17 +7,22 @@ use serenity::model::application::command::Command;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
 use serenity::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
-struct Handler {
-    parsed_data: Vec<ChannelInfo>
+struct ParsedData;
+
+impl TypeMapKey for ParsedData {
+    type Value = Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>>;
 }
+
+struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
     async fn ready(&self, context: Context, _ready: Ready) {
-        println!("I am ready to receive");
         let status = Command::set_global_application_commands(&context.http, |commands| {
             commands
                 .create_application_command(|command| create::register(command))
@@ -28,19 +32,31 @@ impl EventHandler for Handler {
         .await;
 
         if let Err(e) = status {
-            println!("{e}");
+            println!("Client crashed. Exiting. Reason: {e}");
             std::process::exit(1)
         }
+        println!("I am ready to receive");
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
-
             let content = match command.data.name.as_str() {
                 "create" => {
                     let (parsing_status, command_reply) = create::run(&command.data.options);
+
+                    let user_id = ctx.cache.current_user().id.0;
+
+                    let parsed_data_lock = {
+                        let read_data = ctx.data.read().await;
+                        read_data.get::<ParsedData>().unwrap().clone()
+                    };
+
+                    {
+                        let mut parsed_data = parsed_data_lock.write().await;
+                        parsed_data.insert(user_id, parsing_status);
+                    }
                     command_reply
-                },
+                }
                 "help" => help::run(&command.data.options),
                 "start" => start::run(&command.data.options),
                 _ => "Command not found".to_string(),
@@ -80,15 +96,16 @@ pub async fn start_bot() {
 
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
 
-    let default_handler = Handler {
-        parsed_data: Vec::new()
-    };
-
     let mut client = Client::builder(&token, intents)
         .framework(framework)
-        .event_handler(default_handler)
+        .event_handler(Handler)
         .await
         .expect("Err creating client");
+
+    {
+        let mut data = client.data.write().await;
+        data.insert::<ParsedData>(Arc::new(RwLock::new(HashMap::new())));
+    }
 
     if let Err(why) = client.start().await {
         println!("Client error: {:?}", why);
