@@ -41,3 +41,38 @@ fn test_parse_1() {
         break;
     }
 }
+
+#[test]
+fn test_parse_2() {
+    let data = "-cat my category".to_string();
+    let parsed_data = parse_input(data);
+
+    let expected_data = HashMap::from([("category", vec!["my category".to_string()])]);
+
+    assert_eq!(expected_data, parsed_data.unwrap());
+
+    let data = "-p".to_string();
+    let parsed_data = parse_input(data);
+
+    let expected_data = HashMap::from([("private", vec!["true".to_string()])]);
+
+    assert_eq!(expected_data, parsed_data.unwrap());
+
+    let data = "-r my admin, admin".to_string();
+    let parsed_data = parse_input(data);
+
+    let expected_data =
+        HashMap::from([("roles", vec!["my admin".to_string(), "admin".to_string()])]);
+
+    assert_eq!(expected_data, parsed_data.unwrap());
+
+    let data = "-ch my-channel | channel-2".to_string();
+    let parsed_data = parse_input(data);
+
+    let expected_data = HashMap::from([(
+        "channels",
+        vec!["my-channel".to_string(), "channel-2".to_string()],
+    )]);
+
+    assert_eq!(expected_data, parsed_data.unwrap());
+}
