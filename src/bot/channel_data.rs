@@ -6,7 +6,6 @@ pub struct ChannelInfo {
 }
 
 impl ChannelInfo {
-
     pub fn default() -> Self {
         ChannelInfo {
             category: None,
