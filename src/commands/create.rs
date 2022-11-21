@@ -1,5 +1,5 @@
-use crate::parser::parse_input;
-use crate::ChannelInfo;
+use crate::bot::ChannelInfo;
+use crate::parse::{parse_to_channel, parse_to_text};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
@@ -10,7 +10,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
     command
         .name("create")
         .description("Command for creating channels")
-        //.dm_permission(false)
+        .dm_permission(false)
         .create_option(|option| {
             option
                 .name("string")
@@ -28,33 +28,12 @@ pub fn run(options: &[CommandDataOption]) -> (Vec<ChannelInfo>, String) {
         .as_ref()
         .expect("Some value");
     if let CommandDataOptionValue::String(value) = resolved {
-        let parsed_data = parse_input(value.to_string()).unwrap();
-        let mut detected_text = format!("These data were detected\n");
-
-        for (key, value) in parsed_data.iter() {
-            match key {
-                &"category" => detected_text.push_str(&format!("Category: {}\n", value[0])),
-                &"channels" => {
-                    detected_text.push_str("Channels:");
-                    for i in &parsed_data[key] {
-                        detected_text.push_str(&format!(" {i},"));
-                    }
-                    detected_text.pop().unwrap();
-                    detected_text.push_str("\n")
-                }
-                &"roles" => {
-                    detected_text.push_str("Roles:");
-                    for i in &parsed_data[key] {
-                        detected_text.push_str(&format!(" {i},"));
-                    }
-                    detected_text.pop().unwrap();
-                    detected_text.push_str("\n")
-                }
-                _ => {}
-            }
+        let reply_string = parse_to_text(value.to_string());
+        if let Ok(data) = parse_to_channel(value.to_string()) {
+            (data, reply_string)
+        } else {
+            (vec![ChannelInfo::default()], reply_string)
         }
-
-        (vec![ChannelInfo::default()], detected_text)
     } else {
         (
             vec![ChannelInfo::default()],
