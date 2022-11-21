@@ -1,5 +1,5 @@
 extern crate chord;
-use chord::parser::parse_input;
+use chord::parse::parser::parse_input;
 use std::collections::HashMap;
 
 #[test]
