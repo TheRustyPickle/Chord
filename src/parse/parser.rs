@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 
-pub fn parse_input<'a>(mut input: String) -> Result<HashMap<&'a str, Vec<String>>, &'a str> {
+pub fn parse_input<'a>(
+    mut input: String,
+) -> Result<HashMap<&'a str, Vec<String>>, HashMap<&'a str, Vec<String>>> {
     let mut collected_data = HashMap::new();
 
     let sensitive_string = ["-ch", "-cat", "-r", "-p"];
     let mut parsed_successfully = false;
 
-    for _num in 0..99 {
+    for _num in 0..collected_data.len() + 10 {
         if input.is_empty() {
             parsed_successfully = true;
             break;
@@ -93,6 +95,7 @@ pub fn parse_input<'a>(mut input: String) -> Result<HashMap<&'a str, Vec<String>
 
                     channels.push(separated[i].to_owned())
                 }
+
                 input = input
                     .replace(&format!("{channel_input}"), "")
                     .trim()
@@ -104,7 +107,7 @@ pub fn parse_input<'a>(mut input: String) -> Result<HashMap<&'a str, Vec<String>
         }
     }
     if !parsed_successfully {
-        return Err("Parse didn't complete properly within 99 loops");
+        return Err(collected_data);
     }
     Ok(collected_data)
 }
