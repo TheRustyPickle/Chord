@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 pub fn parse_to_text(mut unparsed: String) -> String {
     let mut full_text = String::from("These data were detected\n\n");
-    unparsed = unparsed.trim().replace("\n", " ");
+    unparsed = unparsed.trim().replace('\n', " ");
 
     let splitted_data: Vec<String> = unparsed.split("-cat ").map(|s| s.to_string()).collect();
 
@@ -23,7 +23,7 @@ pub fn parse_to_text(mut unparsed: String) -> String {
             }
         }
 
-        full_text.push_str("\n")
+        full_text.push('\n')
     }
     full_text
 }
@@ -37,7 +37,7 @@ fn channel_text(channel_data: HashMap<&str, Vec<String>>) -> String {
             full_text.push_str(&format!(" {},", role))
         }
         full_text.pop().unwrap();
-        full_text.push_str(" ");
+        full_text.push(' ');
     }
 
     if channel_data.contains_key("private") {
@@ -60,7 +60,7 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
             full_text.push_str(&format!(" {},", role))
         }
         full_text.pop().unwrap();
-        full_text.push_str("\n")
+        full_text.push('\n')
     }
 
     if data.contains_key("private") {
@@ -72,15 +72,15 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
     if data.contains_key("channels") {
         full_text.push_str("Channels:\n");
         for channel in &data["channels"] {
-            let channel_name = channel.split(" ").collect::<Vec<&str>>()[0].to_string();
+            let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
             full_text.push_str(&format!("    {channel_name}: "));
             let channel = channel
-                .replace(&format!("{channel_name}"), "")
+                .replace(&channel_name, "")
                 .trim()
                 .to_string();
 
             if !channel.is_empty() {
-                let parsed_channel = parse_input(format!("{channel}"));
+                let parsed_channel = parse_input(channel.to_string());
                 match parsed_channel {
                     Ok(data) => full_text.push_str(&channel_text(data)),
                     Err(data) => {
@@ -89,9 +89,9 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
                     }
                 }
             }
-            full_text.push_str("\n")
+            full_text.push('\n')
         }
-        full_text.push_str("\n")
+        full_text.push('\n')
     }
 
     full_text

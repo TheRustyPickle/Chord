@@ -23,8 +23,8 @@ impl ChannelInfo {
     ) -> Self {
         ChannelInfo {
             category: Some(category),
-            channel: channel,
-            roles: roles,
+            channel,
+            roles,
             private: None,
         }
     }

@@ -3,7 +3,7 @@ use crate::parse::parse_input;
 use std::collections::HashMap;
 
 pub fn parse_to_channel<'a>(mut unparsed: String) -> Result<Vec<ChannelInfo>, &'a str> {
-    unparsed = unparsed.trim().replace("\n", " ");
+    unparsed = unparsed.trim().replace('\n', " ");
 
     let mut all_channels: Vec<ChannelInfo> = Vec::new();
 
@@ -52,15 +52,15 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
     if data.contains_key("channels") {
         for channel in &data["channels"] {
             let mut channel_data = ChannelInfo::default();
-            let channel_name = channel.split(" ").collect::<Vec<&str>>()[0].to_string();
+            let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
 
             let channel = channel
-                .replace(&format!("{channel_name}"), "")
+                .replace(&channel_name, "")
                 .trim()
                 .to_string();
 
             if !channel.is_empty() {
-                let parsed_channel = parse_input(format!("{channel}"));
+                let parsed_channel = parse_input(channel.to_string());
                 match parsed_channel {
                     Ok(data) => {
                         channel_data.update(

@@ -18,37 +18,37 @@ pub fn parse_input<'a>(
         let data = &splitted_data[0];
         match data.trim() {
             "-cat" => {
-                input = input.replace(&format!("{data}"), "").trim().to_string();
+                input = input.replace(data, "").trim().to_string();
                 let mut category_name = String::new();
                 for i in 1..splitted_data.len() {
-                    if !splitted_data[i].starts_with("-") {
+                    if !splitted_data[i].starts_with('-') {
                         category_name.push_str(&splitted_data[i]);
-                        category_name.push_str(" ");
+                        category_name.push(' ');
                     } else {
                         break;
                     }
                 }
                 category_name = category_name.trim().to_string();
                 input = input
-                    .replace(&format!("{category_name}"), "")
+                    .replace(&category_name, "")
                     .trim()
                     .to_string();
                 collected_data.insert("category", vec![category_name]);
             }
 
             "-p" => {
-                input = input.replacen(&format!("{data}"), "", 1).trim().to_string();
+                input = input.replacen(data, "", 1).trim().to_string();
                 collected_data.insert("private", vec!["true".to_string()]);
             }
             "-r" => {
-                input = input.replacen(&format!("{data}"), "", 1).trim().to_string();
+                input = input.replacen(data, "", 1).trim().to_string();
 
                 let mut role_input = String::new();
 
                 for i in 1..splitted_data.len() {
                     if !sensitive_string.contains(&splitted_data[i].as_str()) {
                         role_input.push_str(&splitted_data[i]);
-                        role_input.push_str(" ");
+                        role_input.push(' ');
                     } else {
                         break;
                     }
@@ -61,7 +61,7 @@ pub fn parse_input<'a>(
                 let mut all_roles = Vec::new();
 
                 for role in comma_splitted {
-                    if !role.starts_with("-") {
+                    if !role.starts_with('-') {
                         all_roles.push(role);
                     } else {
                         break;
@@ -71,13 +71,13 @@ pub fn parse_input<'a>(
                 collected_data.insert("roles", all_roles);
             }
             "-ch" => {
-                input = input.replacen(&format!("{data}"), "", 1).trim().to_string();
+                input = input.replacen(data, "", 1).trim().to_string();
                 let mut channels = Vec::new();
                 let mut separated: Vec<String> =
                     input.split(" | ").map(|s| s.to_string()).collect();
 
                 for i in 0..separated.len() {
-                    let split: Vec<&str> = separated[i].split(" ").collect();
+                    let split: Vec<&str> = separated[i].split(' ').collect();
                     if sensitive_string.contains(&split[0]) {
                         separated.remove(i);
                         break;
@@ -97,7 +97,7 @@ pub fn parse_input<'a>(
                 }
 
                 input = input
-                    .replace(&format!("{channel_input}"), "")
+                    .replace(&channel_input, "")
                     .trim()
                     .to_string();
 
