@@ -74,10 +74,7 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
         for channel in &data["channels"] {
             let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
             full_text.push_str(&format!("    {channel_name}: "));
-            let channel = channel
-                .replace(&channel_name, "")
-                .trim()
-                .to_string();
+            let channel = channel.replace(&channel_name, "").trim().to_string();
 
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());

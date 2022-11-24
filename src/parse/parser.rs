@@ -29,10 +29,7 @@ pub fn parse_input<'a>(
                     }
                 }
                 category_name = category_name.trim().to_string();
-                input = input
-                    .replace(&category_name, "")
-                    .trim()
-                    .to_string();
+                input = input.replace(&category_name, "").trim().to_string();
                 collected_data.insert("category", vec![category_name]);
             }
 
@@ -96,10 +93,7 @@ pub fn parse_input<'a>(
                     channels.push(separated[i].to_owned())
                 }
 
-                input = input
-                    .replace(&channel_input, "")
-                    .trim()
-                    .to_string();
+                input = input.replace(&channel_input, "").trim().to_string();
 
                 collected_data.insert("channels", channels);
             }

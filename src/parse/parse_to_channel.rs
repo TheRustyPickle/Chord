@@ -54,10 +54,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
             let mut channel_data = ChannelInfo::default();
             let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
 
-            let channel = channel
-                .replace(&channel_name, "")
-                .trim()
-                .to_string();
+            let channel = channel.replace(&channel_name, "").trim().to_string();
 
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());
