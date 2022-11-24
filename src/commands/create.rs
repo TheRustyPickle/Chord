@@ -6,6 +6,8 @@ use serenity::model::prelude::interaction::application_command::{
     CommandDataOption, CommandDataOptionValue,
 };
 
+use tracing::{info, error, instrument};
+
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("create")
@@ -20,7 +22,8 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         })
 }
 
-pub fn run(options: &[CommandDataOption]) -> (Vec<ChannelInfo>, String) {
+#[instrument]
+pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, String) {
     let resolved = options
         .get(0)
         .expect("Some value")
@@ -28,15 +31,15 @@ pub fn run(options: &[CommandDataOption]) -> (Vec<ChannelInfo>, String) {
         .as_ref()
         .expect("Some value");
     if let CommandDataOptionValue::String(value) = resolved {
+
+        info!("'Create' parsing data detected: {value}");
+
         let reply_string = parse_to_text(value.to_string());
-        if let Ok(data) = parse_to_channel(value.to_string()) {
-            (data, reply_string)
-        } else {
-            (vec![ChannelInfo::default()], reply_string)
-        }
+        (parse_to_channel(value.to_string()), reply_string)
     } else {
+        error!("Failed to get any parsing value. {resolved:?}");
         (
-            vec![ChannelInfo::default()],
+            Err("Failed to get values. "),
             "No value was given. Parsing will happen here".to_string(),
         )
     }
