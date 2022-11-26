@@ -8,12 +8,13 @@ use serenity::model::application::command::Command;
 use serenity::model::application::component::ButtonStyle;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
+use serenity::model::prelude::*;
 use serenity::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{error, info, debug, instrument};
+use tracing::{error, info, instrument};
 
 struct ParsedData;
 
@@ -49,6 +50,7 @@ impl EventHandler for Handler {
         info!("The bot is online");
     }
 
+    //#[instrument(skip(self, ctx))]
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
             let user_data = command.user.clone();
@@ -87,13 +89,13 @@ impl EventHandler for Handler {
                 _ => "Command not found".to_string(),
             };
 
-            if let Err(why) = command
+            command
                 .create_interaction_response(&ctx.http, |response| {
                     response
                         .kind(InteractionResponseType::ChannelMessageWithSource)
                         .interaction_response_data(|message| {
                             if command.data.name == "create" && parse_success {
-                                message.content(content).components(|c| {
+                                message.content(content).ephemeral(true).components(|c| {
                                     c.create_action_row(|row| {
                                         row.add_button(normal_button(
                                             "Accept",
@@ -103,14 +105,48 @@ impl EventHandler for Handler {
                                     })
                                 })
                             } else {
-                                message.content(content)
+                                message.content(content).ephemeral(true)
                             }
                         })
                 })
-                .await
-            {
-                debug!("Cannot respond to slash command: {}", why);
+                .await.unwrap();
+            if parse_success {
+                let interaction_message = command.get_interaction_response(&ctx.http).await.unwrap();
+                let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
+                match interaction_reply {
+                    Some(reply) => {
+                        match reply.data.custom_id.as_str() {
+                            "Accept" => {
+                                info!(
+                                    "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?}",
+                                    command.data.name,
+                                    user_data.name,
+                                    user_data.discriminator,
+                                    user_data.id.0,
+                                    command.guild_id
+                                );
+                                reply.create_interaction_response(&ctx, |response| 
+                                    response.interaction_response_data(|message| message.content("Accept function will be executed now").ephemeral(true))).await.unwrap();
+                            }
+                            "Reject" => {
+                                info!(
+                                    "Used 'Reject' button on '{}' used by {}#{} with id {} on {:?}",
+                                    command.data.name,
+                                    user_data.name,
+                                    user_data.discriminator,
+                                    user_data.id.0,
+                                    command.guild_id    
+                                );
+                                reply.create_interaction_response(&ctx, |response| 
+                                    response.interaction_response_data(|message| message.content("Reject function will be executed now").ephemeral(true))).await.unwrap();
+                            }
+                            _ => {}
+                        }
+                    }
+                    None => {}
+                }
             }
+            
         }
     }
 }
