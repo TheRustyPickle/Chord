@@ -13,12 +13,10 @@ pub fn parse_to_channel<'a>(mut unparsed: String) -> Result<Vec<ChannelInfo>, &'
         if split.is_empty() {
             continue;
         }
-
         let parsed_data = parse_input(format!("-cat {split}"));
         match parsed_data {
             Ok(data) => {
                 let channel_data = get_base_data(data);
-
                 if let Ok(data) = channel_data {
                     for i in data {
                         all_channels.push(i)
@@ -55,7 +53,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
             let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
 
             let channel = channel.replace(&channel_name, "").trim().to_string();
-
+            println!("{channel_name}");
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());
                 match parsed_channel {
@@ -73,6 +71,9 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
                     }
                     Err(_) => return Err("Could not parse channel"),
                 }
+            } else {
+                channel_data.update_name_category(channel_name, category.clone());
+                all_channels.push(channel_data);
             }
         }
     }

@@ -1,3 +1,4 @@
+#[derive(Debug, Clone)]
 pub struct ChannelInfo {
     category: Option<CategoryInfo>,
     channel: String,
@@ -31,6 +32,11 @@ impl ChannelInfo {
 
     pub fn update_private(&mut self) {
         self.private = Some(true)
+    }
+
+    pub fn update_name_category(&mut self, name: String, category: CategoryInfo) {
+        self.channel = name;
+        self.category = Some(category);
     }
 }
 
