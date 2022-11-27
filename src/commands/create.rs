@@ -6,7 +6,7 @@ use serenity::model::prelude::interaction::application_command::{
     CommandDataOption, CommandDataOptionValue,
 };
 
-use tracing::{info, error, instrument};
+use tracing::{error, info, instrument};
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
@@ -31,7 +31,6 @@ pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, St
         .as_ref()
         .expect("Some value");
     if let CommandDataOptionValue::String(value) = resolved {
-
         info!("'Create' parsing data detected: {value}");
 
         let reply_string = parse_to_text(value.to_string());
