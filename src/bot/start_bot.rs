@@ -1,5 +1,5 @@
 use crate::bot::ChannelInfo;
-use crate::{create, help, start};
+use crate::{accept, create, help, start};
 use serenity::async_trait;
 use serenity::builder::CreateButton;
 use serenity::framework::StandardFramework;
@@ -70,6 +70,7 @@ impl EventHandler for Handler {
                 "create" => {
                     let (parsing_status, command_reply) = create::run(&command.data.options);
                     if let Ok(parsed) = parsing_status {
+                        info!("Inserting parsed data: {parsed:?}");
                         parse_success = true;
                         let parsed_data_lock = {
                             let read_data = ctx.data.read().await;
@@ -109,44 +110,72 @@ impl EventHandler for Handler {
                             }
                         })
                 })
-                .await.unwrap();
+                .await
+                .unwrap();
             if parse_success {
-                let interaction_message = command.get_interaction_response(&ctx.http).await.unwrap();
+                let interaction_message =
+                    command.get_interaction_response(&ctx.http).await.unwrap();
                 let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
                 match interaction_reply {
-                    Some(reply) => {
-                        match reply.data.custom_id.as_str() {
-                            "Accept" => {
-                                info!(
-                                    "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?}",
-                                    command.data.name,
-                                    user_data.name,
-                                    user_data.discriminator,
-                                    user_data.id.0,
-                                    command.guild_id
-                                );
-                                reply.create_interaction_response(&ctx, |response| 
-                                    response.interaction_response_data(|message| message.content("Accept function will be executed now").ephemeral(true))).await.unwrap();
-                            }
-                            "Reject" => {
-                                info!(
-                                    "Used 'Reject' button on '{}' used by {}#{} with id {} on {:?}",
-                                    command.data.name,
-                                    user_data.name,
-                                    user_data.discriminator,
-                                    user_data.id.0,
-                                    command.guild_id    
-                                );
-                                reply.create_interaction_response(&ctx, |response| 
-                                    response.interaction_response_data(|message| message.content("Reject function will be executed now").ephemeral(true))).await.unwrap();
-                            }
-                            _ => {}
+                    Some(reply) => match reply.data.custom_id.as_str() {
+                        "Accept" => {
+                            info!(
+                                "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?}",
+                                command.data.name,
+                                user_data.name,
+                                user_data.discriminator,
+                                user_data.id.0,
+                                command.guild_id
+                            );
+                            reply
+                                .create_interaction_response(&ctx, |response| {
+                                    response.interaction_response_data(|message| {
+                                        message
+                                            .content("Accept function will be executed now")
+                                            .ephemeral(true)
+                                    })
+                                })
+                                .await
+                                .unwrap();
+
+                            let get_channel_data_lock = {
+                                let handler_data_lock = ctx.data.read().await;
+                                handler_data_lock
+                                    .get::<ParsedData>()
+                                    .expect("Error fetching data")
+                                    .clone()
+                            };
+                            let get_channel_data = { get_channel_data_lock.read().await };
+                            accept::run(
+                                &get_channel_data[&user_data.id.0],
+                                command.guild_id.unwrap(),
+                            )
                         }
-                    }
+                        "Reject" => {
+                            info!(
+                                "Used 'Reject' button on '{}' used by {}#{} with id {} on {:?}",
+                                command.data.name,
+                                user_data.name,
+                                user_data.discriminator,
+                                user_data.id.0,
+                                command.guild_id
+                            );
+                            reply
+                                .create_interaction_response(&ctx, |response| {
+                                    response.interaction_response_data(|message| {
+                                        message
+                                            .content("Reject function will be executed now")
+                                            .ephemeral(true)
+                                    })
+                                })
+                                .await
+                                .unwrap();
+                        }
+                        _ => {}
+                    },
                     None => {}
                 }
             }
-            
         }
     }
 }
