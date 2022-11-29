@@ -1,9 +1,9 @@
 #[derive(Debug, Clone)]
 pub struct ChannelInfo {
-    category: Option<CategoryInfo>,
-    channel: String,
-    roles: Option<Vec<String>>,
-    private: Option<bool>,
+    pub category: Option<CategoryInfo>,
+    pub channel: String,
+    pub roles: Option<Vec<String>>,
+    pub private: Option<bool>,
 }
 
 impl ChannelInfo {
@@ -38,11 +38,17 @@ impl ChannelInfo {
         self.channel = name;
         self.category = Some(category);
     }
+
+    pub fn get_category_name(&self) -> Option<&str> {
+        if let Some(category) = &self.category {
+            Some(&category.category)
+        } else { None }
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct CategoryInfo {
-    category: String,
+    pub category: String,
     roles: Vec<String>,
     private: bool,
 }
