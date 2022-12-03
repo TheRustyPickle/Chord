@@ -18,12 +18,12 @@ impl ChannelInfo {
 
     pub fn update(
         &self,
-        category: CategoryInfo,
+        category: Option<CategoryInfo>,
         channel: String,
         roles: Option<Vec<String>>,
     ) -> Self {
         ChannelInfo {
-            category: Some(category),
+            category,
             channel,
             roles,
             private: None,
@@ -34,9 +34,9 @@ impl ChannelInfo {
         self.private = Some(true)
     }
 
-    pub fn update_name_category(&mut self, name: String, category: CategoryInfo) {
+    pub fn update_name_category(&mut self, name: String, category: Option<CategoryInfo>) {
         self.channel = name;
-        self.category = Some(category);
+        self.category = category;
     }
 
     pub fn get_category_name(&self) -> Option<&str> {
