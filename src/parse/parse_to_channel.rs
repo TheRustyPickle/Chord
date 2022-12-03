@@ -32,19 +32,21 @@ pub fn parse_to_channel<'a>(mut unparsed: String) -> Result<Vec<ChannelInfo>, &'
 }
 
 fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &str> {
-    let mut category = CategoryInfo::default();
+    let mut category = None;
     let mut all_channels: Vec<ChannelInfo> = Vec::new();
 
-    if data.contains_key("category") {
-        category.update_name(&data["category"][0])
-    }
+    if data.contains_key("category") && !data["category"][0].is_empty() {
+        let mut cu_category = CategoryInfo::default();
+        cu_category.update_name(&data["category"][0]);
 
-    if data.contains_key("roles") {
-        category.update_roles(data["roles"].to_owned())
-    }
-
-    if data.contains_key("private") {
-        category.update_private()
+        if data.contains_key("roles") {
+            cu_category.update_roles(data["roles"].to_owned());
+        }
+    
+        if data.contains_key("private") {
+            cu_category.update_private();
+        }
+        category = Some(cu_category)
     }
 
     if data.contains_key("channels") {
@@ -53,7 +55,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
             let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
 
             let channel = channel.replace(&channel_name, "").trim().to_string();
-            println!("{channel_name}");
+            
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());
                 match parsed_channel {
@@ -63,6 +65,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
                             channel_name,
                             data.get("roles").cloned(),
                         );
+                        
                         if data.contains_key("private") {
                             channel_data.update_private()
                         }
