@@ -11,8 +11,9 @@ pub fn parse_to_text(mut unparsed: String) -> String {
         if split.is_empty() {
             continue;
         }
-
+        
         let parsed_data = parse_input(format!("-cat {split}"));
+
         match parsed_data {
             Ok(data) => {
                 full_text.push_str(&main_text(data));
@@ -50,7 +51,7 @@ fn channel_text(channel_data: HashMap<&str, Vec<String>>) -> String {
 fn main_text(data: HashMap<&str, Vec<String>>) -> String {
     let mut full_text = String::new();
 
-    if data.contains_key("category") {
+    if data.contains_key("category") && !data["category"][0].is_empty() {
         full_text.push_str(&format!("Category: {}\n", data["category"][0]))
     }
 
