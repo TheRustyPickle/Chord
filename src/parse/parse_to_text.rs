@@ -11,7 +11,7 @@ pub fn parse_to_text(mut unparsed: String) -> String {
         if split.is_empty() {
             continue;
         }
-        
+
         let parsed_data = parse_input(format!("-cat {split}"));
 
         match parsed_data {
