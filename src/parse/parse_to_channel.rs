@@ -42,7 +42,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
         if data.contains_key("roles") {
             cu_category.update_roles(data["roles"].to_owned());
         }
-    
+
         if data.contains_key("private") {
             cu_category.update_private();
         }
@@ -65,11 +65,9 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
                             channel_name,
                             data.get("roles").cloned(),
                         );
-                        
                         if data.contains_key("private") {
                             channel_data.update_private()
                         }
-
                         all_channels.push(channel_data);
                     }
                     Err(_) => return Err("Could not parse channel"),
