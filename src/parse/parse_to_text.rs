@@ -78,8 +78,12 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
             let mut channel_name_unparsed: String = String::new();
 
             for word in channel.split(' ').collect::<Vec<&str>>() {
-                if SENSITIVE_STRING.contains(&word) {break}
-                if word.starts_with("|") {break}
+                if SENSITIVE_STRING.contains(&word) {
+                    break;
+                }
+                if word.starts_with("|") {
+                    break;
+                }
 
                 channel_name_unparsed.push_str(&format!(" {word}"));
             }
@@ -87,9 +91,12 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
             channel_name_unparsed = channel_name_unparsed.trim().to_string();
 
             let channel_name = channel_name_unparsed.replace(" ", "-");
-            
+
             full_text.push_str(&format!("    {channel_name}: "));
-            let channel = channel.replace(&channel_name_unparsed, "").trim().to_string();
+            let channel = channel
+                .replace(&channel_name_unparsed, "")
+                .trim()
+                .to_string();
 
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());

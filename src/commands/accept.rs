@@ -22,7 +22,7 @@ pub async fn run(
             everyone_role = Some(role_id)
         }
     }
-    
+
     let all_guild_channels = ctx.http.get_channels(guild_id.0).await?;
     for guild in all_guild_channels {
         if guild.kind == ChannelType::Category {
@@ -34,22 +34,23 @@ pub async fn run(
         let category_id = match channel.get_category_name() {
             Some(name) => {
                 if all_category.contains_key(name) {
-                    info!("{name} Category name already exists. {}", all_category[name]);
+                    info!(
+                        "{name} Category name already exists. {}",
+                        all_category[name]
+                    );
                     Some(all_category[name])
                 } else {
-                    let new_category = 
-                        GuildId(guild_id.0)
-                            .create_channel(&ctx.http, |c| {
-                                c.name(name).kind(ChannelType::Category);
+                    let new_category = GuildId(guild_id.0)
+                        .create_channel(&ctx.http, |c| {
+                            c.name(name).kind(ChannelType::Category);
 
-                                if channel.get_category_private() {
-                                    c.permissions(do_private(everyone_role.unwrap()));
-                                }
-                                c
-                            })
-                            .await
-                            ?
-                            .id;
+                            if channel.get_category_private() {
+                                c.permissions(do_private(everyone_role.unwrap()));
+                            }
+                            c
+                        })
+                        .await?
+                        .id;
                     all_category.insert(name.to_string(), new_category);
                     info!("{name} Category does not exist. Creating new category. {new_category}");
                     Some(new_category)
@@ -70,13 +71,9 @@ pub async fn run(
             }
 
             if channel.get_category_private() {
-                override_permissions_private(cat_id, role_ids, &ctx)
-                    .await
-                    ?
+                override_permissions_private(cat_id, role_ids, &ctx).await?
             } else {
-                override_permissions_public(cat_id, role_ids, &ctx)
-                    .await
-                    ?
+                override_permissions_public(cat_id, role_ids, &ctx).await?
             }
         }
 
@@ -90,8 +87,7 @@ pub async fn run(
 
                 c
             })
-            .await
-            ?;
+            .await?;
 
         let mut channel_roles = vec![];
 
@@ -113,21 +109,9 @@ pub async fn run(
                 }
             }
             if let Some(_) = channel.private {
-                override_permissions_private(
-                    created_channel.id,
-                    channel_roles,
-                    ctx,
-                )
-                .await
-                ?;
+                override_permissions_private(created_channel.id, channel_roles, ctx).await?;
             } else {
-                override_permissions_public(
-                    created_channel.id,
-                    channel_roles,
-                    ctx,
-                )
-                .await
-                ?;
+                override_permissions_public(created_channel.id, channel_roles, ctx).await?;
             }
         }
     }
@@ -155,10 +139,7 @@ async fn override_permissions_public(
             deny,
             kind: PermissionOverwriteType::Role(role.to_owned()),
         };
-        channel_id
-            .create_permission(&ctx.http, &overwrite)
-            .await
-            ?;
+        channel_id.create_permission(&ctx.http, &overwrite).await?;
     }
 
     Ok(())
@@ -179,10 +160,7 @@ async fn override_permissions_private(
             deny,
             kind: PermissionOverwriteType::Role(role.to_owned()),
         };
-        channel_id
-            .create_permission(&ctx.http, &overwrite)
-            .await
-            ?;
+        channel_id.create_permission(&ctx.http, &overwrite).await?;
     }
 
     Ok(())
