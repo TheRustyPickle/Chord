@@ -146,10 +146,16 @@ impl EventHandler for Handler {
                                     .clone()
                             };
                             let get_channel_data = { get_channel_data_lock.read().await };
-                            accept::run(
+                            match accept::run(
                                 &get_channel_data[&user_data.id.0],
                                 command.guild_id.unwrap(),
+                                &ctx,
                             )
+                            .await
+                            {
+                                Ok(_) => {}
+                                Err(err) => println!("{err}"),
+                            }
                         }
                         "Reject" => {
                             info!(
