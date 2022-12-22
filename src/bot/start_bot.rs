@@ -70,7 +70,7 @@ impl EventHandler for Handler {
                 "create" => {
                     let (parsing_status, command_reply) = create::run(&command.data.options);
                     if let Ok(parsed) = parsing_status {
-                        info!("Inserting parsed data: {parsed:?}");
+                        info!("Inserting parsed data: {parsed:#?}");
                         parse_success = true;
                         let parsed_data_lock = {
                             let read_data = ctx.data.read().await;
