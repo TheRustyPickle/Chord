@@ -17,17 +17,14 @@ impl ChannelInfo {
     }
 
     pub fn update(
-        &self,
+        &mut self,
         category: Option<CategoryInfo>,
         channel: String,
         roles: Option<Vec<String>>,
-    ) -> Self {
-        ChannelInfo {
-            category,
-            channel,
-            roles,
-            private: None,
-        }
+    ) {
+        self.category = category;
+        self.channel = channel;
+        self.roles = roles;
     }
 
     pub fn update_private(&mut self) {
@@ -42,14 +39,32 @@ impl ChannelInfo {
     pub fn get_category_name(&self) -> Option<&str> {
         if let Some(category) = &self.category {
             Some(&category.category)
-        } else { None }
+        } else {
+            None
+        }
+    }
+
+    pub fn get_category_roles(&self) -> &Option<Vec<String>> {
+        if let Some(category) = &self.category {
+            &category.roles
+        } else {
+            &None
+        }
+    }
+
+    pub fn get_category_private(&self) -> bool {
+        if let Some(category) = &self.category {
+            category.private
+        } else {
+            false
+        }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct CategoryInfo {
     pub category: String,
-    roles: Vec<String>,
+    roles: Option<Vec<String>>,
     private: bool,
 }
 
@@ -57,7 +72,7 @@ impl CategoryInfo {
     pub fn default() -> Self {
         CategoryInfo {
             category: "None".to_string(),
-            roles: Vec::new(),
+            roles: None,
             private: false,
         }
     }
@@ -67,7 +82,7 @@ impl CategoryInfo {
     }
 
     pub fn update_roles(&mut self, roles: Vec<String>) {
-        self.roles = roles
+        self.roles = Some(roles)
     }
 
     pub fn update_private(&mut self) {
