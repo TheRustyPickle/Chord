@@ -2,6 +2,8 @@ use crate::bot::{CategoryInfo, ChannelInfo};
 use crate::parse::parse_input;
 use std::collections::HashMap;
 
+const SENSITIVE_STRING: [&str; 4] = ["-ch", "-cat", "-r", "-p"];
+
 pub fn parse_to_channel<'a>(mut unparsed: String) -> Result<Vec<ChannelInfo>, &'a str> {
     unparsed = unparsed.trim().replace('\n', " ");
 
@@ -52,9 +54,20 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
     if data.contains_key("channels") {
         for channel in &data["channels"] {
             let mut channel_data = ChannelInfo::default();
-            let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
 
-            let channel = channel.replace(&channel_name, "").trim().to_string();
+            let mut channel_name_unparsed = String::new();
+
+            for word in channel.split(' ').collect::<Vec<&str>>() {
+                if SENSITIVE_STRING.contains(&word) {break}
+                if word.starts_with("|") {break}
+
+                channel_name_unparsed.push_str(&format!(" {word}"));
+            }
+            channel_name_unparsed = channel_name_unparsed.trim().to_string();
+
+            let channel_name = channel_name_unparsed.replace(" ", "-");
+
+            let channel = channel.replace(&channel_name_unparsed, "").trim().to_string();
             
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());

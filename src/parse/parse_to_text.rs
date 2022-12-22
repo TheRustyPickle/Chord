@@ -1,6 +1,8 @@
 use crate::parse::parse_input;
 use std::collections::HashMap;
 
+const SENSITIVE_STRING: [&str; 4] = ["-ch", "-cat", "-r", "-p"];
+
 pub fn parse_to_text(mut unparsed: String) -> String {
     let mut full_text = String::from("These data were detected\n\n");
     unparsed = unparsed.trim().replace('\n', " ");
@@ -73,9 +75,21 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
     if data.contains_key("channels") {
         full_text.push_str("Channels:\n");
         for channel in &data["channels"] {
-            let channel_name = channel.split(' ').collect::<Vec<&str>>()[0].to_string();
+            let mut channel_name_unparsed: String = String::new();
+
+            for word in channel.split(' ').collect::<Vec<&str>>() {
+                if SENSITIVE_STRING.contains(&word) {break}
+                if word.starts_with("|") {break}
+
+                channel_name_unparsed.push_str(&format!(" {word}"));
+            }
+
+            channel_name_unparsed = channel_name_unparsed.trim().to_string();
+
+            let channel_name = channel_name_unparsed.replace(" ", "-");
+            
             full_text.push_str(&format!("    {channel_name}: "));
-            let channel = channel.replace(&channel_name, "").trim().to_string();
+            let channel = channel.replace(&channel_name_unparsed, "").trim().to_string();
 
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());
