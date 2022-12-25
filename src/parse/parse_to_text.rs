@@ -1,7 +1,7 @@
 use crate::parse::parse_input;
 use std::collections::HashMap;
 
-const SENSITIVE_STRING: [&str; 4] = ["-ch", "-cat", "-r", "-p"];
+const SENSITIVE_STRING: [&str; 5] = ["-ch", "-cat", "-r", "-p", "-t"];
 
 pub fn parse_to_text(mut unparsed: String) -> String {
     let mut full_text = String::from("These data were detected\n\n");
@@ -44,7 +44,15 @@ fn channel_text(channel_data: HashMap<&str, Vec<String>>) -> String {
     }
 
     if channel_data.contains_key("private") {
-        full_text.push_str("Private: Yes")
+        full_text.push_str("Private: Yes ")
+    }
+    if channel_data.contains_key("channel_type") {
+        match channel_data["channel_type"][0].as_str() {
+            "text" => full_text.push_str(&format!("Channel Type: Text")),
+            "voice" => full_text.push_str(&format!("Channel Type: voice")),
+            "ann" => full_text.push_str(&format!("Channel Type: Announcement")),
+            _ => {}
+        }
     }
 
     full_text
@@ -87,7 +95,7 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
 
                 channel_name_unparsed.push_str(&format!(" {word}"));
             }
-
+            println!("{}", channel_name_unparsed);
             channel_name_unparsed = channel_name_unparsed.trim().to_string();
 
             let channel_name = channel_name_unparsed.replace(" ", "-");

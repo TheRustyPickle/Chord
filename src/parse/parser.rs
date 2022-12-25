@@ -5,7 +5,7 @@ pub fn parse_input<'a>(
 ) -> Result<HashMap<&'a str, Vec<String>>, HashMap<&'a str, Vec<String>>> {
     let mut collected_data = HashMap::new();
 
-    let sensitive_string = ["-ch", "-cat", "-r", "-p"];
+    let sensitive_string = ["-ch", "-cat", "-r", "-p", "-t"];
     let mut parsed_successfully = false;
 
     for _num in 0..collected_data.len() + 10 {
@@ -80,9 +80,7 @@ pub fn parse_input<'a>(
                         break;
                     }
                 }
-
-                // TODO do not allow spaces between channel name. use replacen 1
-
+                
                 let mut channel_input = String::new();
                 for i in 0..separated.len() {
                     channel_input.push_str(&separated[i]);
@@ -96,6 +94,15 @@ pub fn parse_input<'a>(
                 input = input.replace(&channel_input, "").trim().to_string();
 
                 collected_data.insert("channels", channels);
+            }
+            "-t" => {
+                input = input.replacen(data, "", 1).trim().to_string();
+                let channel_type = &splitted_data[1].trim();
+                collected_data.insert(
+                    "channel_type",
+                    vec![channel_type.to_lowercase().to_string()],
+                );
+                input = input.replace(channel_type, "").trim().to_string();
             }
             _ => {}
         }

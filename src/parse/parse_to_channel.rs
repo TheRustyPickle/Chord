@@ -2,7 +2,7 @@ use crate::bot::{CategoryInfo, ChannelInfo};
 use crate::parse::parse_input;
 use std::collections::HashMap;
 
-const SENSITIVE_STRING: [&str; 4] = ["-ch", "-cat", "-r", "-p"];
+const SENSITIVE_STRING: [&str; 5] = ["-ch", "-cat", "-r", "-p", "-t"];
 
 pub fn parse_to_channel<'a>(mut unparsed: String) -> Result<Vec<ChannelInfo>, &'a str> {
     unparsed = unparsed.trim().replace('\n', " ");
@@ -85,9 +85,15 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
                             channel_name,
                             data.get("roles").cloned(),
                         );
+
                         if data.contains_key("private") {
                             channel_data.update_private()
                         }
+
+                        if data.contains_key("channel_type") {
+                            channel_data.update_channel_type(&data["channel_type"][0])
+                        }
+
                         all_channels.push(channel_data);
                     }
                     Err(_) => return Err("Could not parse channel"),
