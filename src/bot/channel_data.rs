@@ -1,8 +1,10 @@
+use serenity::model::channel::ChannelType;
 #[derive(Debug, Clone)]
 pub struct ChannelInfo {
     pub category: Option<CategoryInfo>,
     pub channel: String,
     pub roles: Option<Vec<String>>,
+    pub channel_type: ChannelType,
     pub private: Option<bool>,
 }
 
@@ -12,6 +14,7 @@ impl ChannelInfo {
             category: None,
             channel: String::new(),
             roles: None,
+            channel_type: ChannelType::Text,
             private: None,
         }
     }
@@ -34,6 +37,15 @@ impl ChannelInfo {
     pub fn update_name_category(&mut self, name: String, category: Option<CategoryInfo>) {
         self.channel = name;
         self.category = category;
+    }
+
+    pub fn update_channel_type(&mut self, ch_type: &str) {
+        match ch_type {
+            "text" => self.channel_type = ChannelType::Text,
+            "voice" => self.channel_type = ChannelType::Voice,
+            "ann" => self.channel_type = ChannelType::News,
+            _ => {}
+        }
     }
 
     pub fn get_category_name(&self) -> Option<&str> {
