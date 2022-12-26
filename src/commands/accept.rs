@@ -84,6 +84,7 @@ pub async fn run(
                 if let Some(cat_id) = category_id {
                     c.category(cat_id);
                 }
+                c.kind(channel.channel_type);
 
                 c
             })
