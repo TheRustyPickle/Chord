@@ -18,10 +18,12 @@ use tracing::{error, info, instrument};
 
 struct ParsedData;
 
+// Save user id as key with channel data as value in the struct
 impl TypeMapKey for ParsedData {
     type Value = Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>>;
 }
 
+// creates a button based on the style and the text that is passed
 fn normal_button(name: &str, style: ButtonStyle) -> CreateButton {
     let mut b = CreateButton::default();
     b.custom_id(name);
@@ -34,6 +36,7 @@ struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
+    // Create the designated slash commands on bot start
     async fn ready(&self, context: Context, _ready: Ready) {
         let status = Command::set_global_application_commands(&context.http, |commands| {
             commands
@@ -43,6 +46,7 @@ impl EventHandler for Handler {
         })
         .await;
 
+        // exit the app if command creation is failed
         if let Err(e) = status {
             error!("Client crashed. Exiting. Reason: {e}");
             std::process::exit(1)
@@ -68,7 +72,10 @@ impl EventHandler for Handler {
 
             let content = match command.data.name.as_str() {
                 "create" => {
+                    // run the command, get channel data as result and the string to send as a reply
                     let (parsing_status, command_reply) = create::run(&command.data.options);
+
+                    // if channel data properly acquired, unlock struct value, write the channel data in hashmap and close
                     if let Ok(parsed) = parsing_status {
                         info!("Inserting parsed data: {parsed:#?}");
                         parse_success = true;
@@ -85,11 +92,14 @@ impl EventHandler for Handler {
 
                     command_reply
                 }
+                // returns a string which is sent as the reply
                 "help" => help::run(&command.data.options),
                 "start" => start::run(&command.data.options),
                 _ => "Command not found".to_string(),
             };
 
+            // add Accept and Reject button if parsing was successful and if 'create' was called
+            // ephemeral makes the message visible only to the command executor
             command
                 .create_interaction_response(&ctx.http, |response| {
                     response
@@ -112,11 +122,16 @@ impl EventHandler for Handler {
                 })
                 .await
                 .unwrap();
+
             if parse_success {
+                // get the message which was sent as a reply to the slash command
                 let interaction_message =
                     command.get_interaction_response(&ctx.http).await.unwrap();
+                // create a interaction tracker to the message
                 let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
+                
                 match interaction_reply {
+                    // start matching button id
                     Some(reply) => match reply.data.custom_id.as_str() {
                         "Accept" => {
                             info!(
@@ -131,13 +146,14 @@ impl EventHandler for Handler {
                                 .create_interaction_response(&ctx, |response| {
                                     response.interaction_response_data(|message| {
                                         message
-                                            .content("Accept function will be executed now")
+                                            .content("Command accepted. Execution will start now.")
                                             .ephemeral(true)
                                     })
                                 })
                                 .await
                                 .unwrap();
 
+                            // read the data that was saved inside the hashmap to get the channel data
                             let get_channel_data_lock = {
                                 let handler_data_lock = ctx.data.read().await;
                                 handler_data_lock
@@ -146,6 +162,7 @@ impl EventHandler for Handler {
                                     .clone()
                             };
                             let get_channel_data = { get_channel_data_lock.read().await };
+
                             match accept::run(
                                 &get_channel_data[&user_data.id.0],
                                 command.guild_id.unwrap(),
@@ -154,7 +171,10 @@ impl EventHandler for Handler {
                             .await
                             {
                                 Ok(_) => {}
-                                Err(err) => println!("{err}"),
+                                Err(err) => {
+                                    info!("Error while doing Accept command. Error: {err}");
+                                    command.channel_id.say(&ctx.http, format!("There was an error during the interaction. Error: {err}")).await.unwrap();
+                                }
                             }
                         }
                         "Reject" => {
@@ -170,7 +190,9 @@ impl EventHandler for Handler {
                                 .create_interaction_response(&ctx, |response| {
                                     response.interaction_response_data(|message| {
                                         message
-                                            .content("Reject function will be executed now")
+                                            .content(
+                                                "Command abandoned. The message can be dismissed.",
+                                            )
                                             .ephemeral(true)
                                     })
                                 })
@@ -187,7 +209,9 @@ impl EventHandler for Handler {
 }
 #[instrument]
 pub async fn start_bot() {
+    // initialize trace logging
     tracing_subscriber::fmt::init();
+    // get the bot token from environment
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
     let http = Http::new(&token);
@@ -204,6 +228,7 @@ pub async fn start_bot() {
 
     let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix("!"));
 
+    // allow only two intents to prevent flooding
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
 
     let mut client = Client::builder(&token, intents)
@@ -212,6 +237,7 @@ pub async fn start_bot() {
         .await
         .expect("Err creating client");
 
+    // initialize the struct data so if we fetch, it does not crash.
     {
         let mut data = client.data.write().await;
         data.insert::<ParsedData>(Arc::new(RwLock::new(HashMap::new())));
