@@ -5,14 +5,14 @@ use serenity::model::id::{ChannelId, GuildId, RoleId};
 use serenity::model::Permissions;
 use serenity::prelude::*;
 use std::collections::HashMap;
-use std::error::Error;
+use serenity::Error;
 use tracing::info;
 
 pub async fn run(
     data: &Vec<ChannelInfo>,
     guild_id: GuildId,
     ctx: &Context,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Error> {
     let mut all_category = HashMap::new();
     let all_roles = guild_id.roles(&ctx.http).await?;
     let mut everyone_role = None;
@@ -123,7 +123,7 @@ async fn override_permissions_public(
     channel_id: ChannelId,
     roles: Vec<&RoleId>,
     ctx: &Context,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Error> {
     let allow =
         Permissions::SEND_MESSAGES | Permissions::VIEW_CHANNEL | Permissions::READ_MESSAGE_HISTORY;
     let deny = Permissions::MENTION_EVERYONE
@@ -150,7 +150,7 @@ async fn override_permissions_private(
     channel_id: ChannelId,
     roles: Vec<&RoleId>,
     ctx: &Context,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Error> {
     let allow =
         Permissions::SEND_MESSAGES | Permissions::VIEW_CHANNEL | Permissions::READ_MESSAGE_HISTORY;
     let deny = Permissions::empty();
