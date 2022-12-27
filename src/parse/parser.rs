@@ -80,7 +80,7 @@ pub fn parse_input<'a>(
                         break;
                     }
                 }
-                
+
                 let mut channel_input = String::new();
                 for i in 0..separated.len() {
                     channel_input.push_str(&separated[i]);

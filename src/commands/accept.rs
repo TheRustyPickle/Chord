@@ -4,15 +4,11 @@ use serenity::model::channel::{PermissionOverwrite, PermissionOverwriteType};
 use serenity::model::id::{ChannelId, GuildId, RoleId};
 use serenity::model::Permissions;
 use serenity::prelude::*;
-use std::collections::HashMap;
 use serenity::Error;
+use std::collections::HashMap;
 use tracing::info;
 
-pub async fn run(
-    data: &Vec<ChannelInfo>,
-    guild_id: GuildId,
-    ctx: &Context,
-) -> Result<(), Error> {
+pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> Result<(), Error> {
     let mut all_category = HashMap::new();
     let all_roles = guild_id.roles(&ctx.http).await?;
     let mut everyone_role = None;
