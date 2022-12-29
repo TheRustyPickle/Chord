@@ -88,7 +88,18 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
 
         let mut channel_roles = vec![];
 
-        if let Some(_) = channel.private {
+        if channel.roles != None && channel.get_category_roles() == &None {
+            created_channel
+                .id
+                .edit(&ctx.http, |c| {
+                    c.name(&channel.channel)
+                        .permissions(remove_all_permissions(everyone_role.unwrap()))
+                })
+                .await?;
+                
+        }
+
+        if channel.private != None || channel.get_category_private() {
             created_channel
                 .id
                 .edit(&ctx.http, |c| {
@@ -166,6 +177,17 @@ async fn override_permissions_private(
 fn do_private(role: &RoleId) -> Vec<PermissionOverwrite> {
     let allow = Permissions::empty();
     let deny = Permissions::VIEW_CHANNEL;
+
+    vec![PermissionOverwrite {
+        allow,
+        deny,
+        kind: PermissionOverwriteType::Role(role.to_owned()),
+    }]
+}
+
+fn remove_all_permissions(role: &RoleId) -> Vec<PermissionOverwrite> {
+    let allow = Permissions::empty();
+    let deny = Permissions::empty();
 
     vec![PermissionOverwrite {
         allow,
