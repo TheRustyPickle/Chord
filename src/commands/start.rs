@@ -4,9 +4,15 @@ use serenity::model::prelude::interaction::application_command::CommandDataOptio
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("start")
-        .description("This is a start command to navigate the bot")
+        .description("Shows relevant command of the bot")
 }
 
 pub fn run(_options: &[CommandDataOption]) -> String {
-    "/start text will be placed here".to_string()
+    "This bot is intended to create Categories and Channel in a discord guild, fast, using CLI like messages. It should be used as a faster way to create multiple channels and categories using a small message and later modified to the liking and the necessities. It aims to reduce the hassle when creating a guild from the scratch.
+    
+Following commands are available
+    
+/help : Shows how to use this bot and parameters that are recognized
+/create : Accepts a string that is parsed into categories and channels
+/feedback : Faced an error, not working as intended or want to suggest something? Send it through this command".to_string()
 }
