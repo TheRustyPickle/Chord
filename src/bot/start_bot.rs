@@ -1,5 +1,5 @@
 use crate::bot::ChannelInfo;
-use crate::{accept, create, help, start};
+use crate::{accept, create, help, start, example};
 use serenity::async_trait;
 use serenity::builder::CreateButton;
 use serenity::framework::StandardFramework;
@@ -43,6 +43,7 @@ impl EventHandler for Handler {
                 .create_application_command(|command| create::register(command))
                 .create_application_command(|command| help::register(command))
                 .create_application_command(|command| start::register(command))
+                .create_application_command(|command| example::register(command))
         })
         .await;
 
@@ -95,6 +96,7 @@ impl EventHandler for Handler {
                 // returns a string which is sent as the reply
                 "help" => help::run(&command.data.options),
                 "start" => start::run(&command.data.options),
+                "example" => example::run(&command.data.options),
                 _ => "Command not found".to_string(),
             };
 
@@ -129,7 +131,7 @@ impl EventHandler for Handler {
                     command.get_interaction_response(&ctx.http).await.unwrap();
                 // create a interaction tracker to the message
                 let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
-                
+
                 match interaction_reply {
                     // start matching button id
                     Some(reply) => match reply.data.custom_id.as_str() {
