@@ -88,7 +88,8 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
 
         let mut channel_roles = vec![];
 
-        if channel.roles != None && channel.get_category_roles() == &None {
+        // if we have to override permissions from category or add roles for a channel, remove all permissions that has been added
+        if channel.roles != None {
             created_channel
                 .id
                 .edit(&ctx.http, |c| {
@@ -97,8 +98,20 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
                 })
                 .await?;
                 
+        } else {
+            // if channel roles is empty, collect the category roles for adding to the channel
+            if let Some(cat_roles) = channel.get_category_roles() {
+                for (role_id, role) in all_roles.iter() {
+                    if cat_roles.contains(&role.name) {
+                        channel_roles.push(role_id);
+                        info!("{} role found for channel", role.name);
+                    }
+                }
+            }
         }
 
+        // if either the channel or the category is private, make the channel private
+        // this also removes all roles if added to the channel
         if channel.private != None || channel.get_category_private() {
             created_channel
                 .id
@@ -109,6 +122,7 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
                 .await?;
         }
 
+        // collect all role ids from channel if existing
         if let Some(ch_roles) = &channel.roles {
             for (role_id, role) in all_roles.iter() {
                 if ch_roles.contains(&role.name) {
@@ -116,11 +130,13 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
                     info!("{} role found for channel", role.name);
                 }
             }
-            if let Some(_) = channel.private {
-                override_permissions_private(created_channel.id, channel_roles, ctx).await?;
-            } else {
-                override_permissions_public(created_channel.id, channel_roles, ctx).await?;
-            }
+        }
+
+        // send out permission based on whether the channel was selected private or public
+        if channel.private != None || channel.get_category_private() {
+            override_permissions_private(created_channel.id, channel_roles, ctx).await?;
+        } else {
+            override_permissions_public(created_channel.id, channel_roles, ctx).await?;
         }
     }
     Ok(())
