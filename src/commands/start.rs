@@ -14,5 +14,5 @@ Following commands are available
     
 /help : Shows how to use this bot and parameters that are recognized
 /create : Accepts a string that is parsed into categories and channels
-/feedback : Faced an error, not working as intended or want to suggest something? Send it through this command".to_string()
+/example : Get some examples of what kind of commands are recognized".to_string()
 }
