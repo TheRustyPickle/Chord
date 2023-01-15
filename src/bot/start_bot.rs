@@ -1,5 +1,5 @@
 use crate::bot::ChannelInfo;
-use crate::{accept, create, help, start, example};
+use crate::{create, help, start, example};
 use serenity::async_trait;
 use serenity::builder::CreateButton;
 use serenity::framework::StandardFramework;
@@ -16,7 +16,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{error, info, instrument};
 
-struct ParsedData;
+pub struct ParsedData;
 
 // Save user id as key with channel data as value in the struct
 impl TypeMapKey for ParsedData {
@@ -126,85 +126,7 @@ impl EventHandler for Handler {
                 .unwrap();
 
             if parse_success {
-                // get the message which was sent as a reply to the slash command
-                let interaction_message =
-                    command.get_interaction_response(&ctx.http).await.unwrap();
-                // create a interaction tracker to the message
-                let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
-
-                match interaction_reply {
-                    // start matching button id
-                    Some(reply) => match reply.data.custom_id.as_str() {
-                        "Accept" => {
-                            info!(
-                                "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?}",
-                                command.data.name,
-                                user_data.name,
-                                user_data.discriminator,
-                                user_data.id.0,
-                                command.guild_id
-                            );
-                            reply
-                                .create_interaction_response(&ctx, |response| {
-                                    response.interaction_response_data(|message| {
-                                        message
-                                            .content("Command accepted. Execution will start now.")
-                                            .ephemeral(true)
-                                    })
-                                })
-                                .await
-                                .unwrap();
-
-                            // read the data that was saved inside the hashmap to get the channel data
-                            let get_channel_data_lock = {
-                                let handler_data_lock = ctx.data.read().await;
-                                handler_data_lock
-                                    .get::<ParsedData>()
-                                    .expect("Error fetching data")
-                                    .clone()
-                            };
-                            let get_channel_data = { get_channel_data_lock.read().await };
-
-                            match accept::run(
-                                &get_channel_data[&user_data.id.0],
-                                command.guild_id.unwrap(),
-                                &ctx,
-                            )
-                            .await
-                            {
-                                Ok(_) => {}
-                                Err(err) => {
-                                    info!("Error while doing Accept command. Error: {err}");
-                                    command.channel_id.say(&ctx.http, format!("There was an error during the interaction. Error: {err}")).await.unwrap();
-                                }
-                            }
-                        }
-                        "Reject" => {
-                            info!(
-                                "Used 'Reject' button on '{}' used by {}#{} with id {} on {:?}",
-                                command.data.name,
-                                user_data.name,
-                                user_data.discriminator,
-                                user_data.id.0,
-                                command.guild_id
-                            );
-                            reply
-                                .create_interaction_response(&ctx, |response| {
-                                    response.interaction_response_data(|message| {
-                                        message
-                                            .content(
-                                                "Command abandoned. The message can be dismissed.",
-                                            )
-                                            .ephemeral(true)
-                                    })
-                                })
-                                .await
-                                .unwrap();
-                        }
-                        _ => {}
-                    },
-                    None => {}
-                }
+                create::setup(&ctx, command, user_data).await;
             }
         }
     }
