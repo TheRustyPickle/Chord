@@ -1,5 +1,5 @@
 use crate::bot::ChannelInfo;
-use crate::{create, help, start, example};
+use crate::{create, help, start, example, setup};
 use serenity::async_trait;
 use serenity::builder::CreateButton;
 use serenity::framework::StandardFramework;
@@ -24,7 +24,7 @@ impl TypeMapKey for ParsedData {
 }
 
 // creates a button based on the style and the text that is passed
-fn normal_button(name: &str, style: ButtonStyle) -> CreateButton {
+pub fn normal_button(name: &str, style: ButtonStyle) -> CreateButton {
     let mut b = CreateButton::default();
     b.custom_id(name);
     b.label(name);
@@ -44,6 +44,7 @@ impl EventHandler for Handler {
                 .create_application_command(|command| help::register(command))
                 .create_application_command(|command| start::register(command))
                 .create_application_command(|command| example::register(command))
+                .create_application_command(|command| setup::register(command))
         })
         .await;
 
@@ -97,6 +98,7 @@ impl EventHandler for Handler {
                 "help" => help::run(&command.data.options),
                 "start" => start::run(&command.data.options),
                 "example" => example::run(&command.data.options),
+                "setup" => setup::run(&command.data.options),
                 _ => "Command not found".to_string(),
             };
 
@@ -127,6 +129,8 @@ impl EventHandler for Handler {
 
             if parse_success {
                 create::setup(&ctx, command, user_data).await;
+            } else if command.data.name == "setup" {
+                setup::setup(&ctx, command, user_data).await;
             }
         }
     }
