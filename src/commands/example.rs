@@ -2,11 +2,13 @@ use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::interaction::application_command::CommandDataOption;
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command.name("example").description("Check examples of the accepted commands")
+    command
+        .name("example")
+        .description("Check examples of the accepted commands")
 }
 
 pub fn run(_options: &[CommandDataOption]) -> String {
-"1. -cat my category -p -r admin, member -ch general | memes
+    "1. -cat my category -p -r admin, member -ch general | memes
 
 Explanation: Create a private category 'my category' where 'admin' and 'member' role will have access to the channels 'general' and 'memes'
 

@@ -31,7 +31,7 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
             Some(name) => {
                 if all_category.contains_key(name) {
                     info!(
-                        "{name} Category name already exists. {}",
+                        "'{name}' Category name already exists. {}",
                         all_category[name]
                     );
                     Some(all_category[name])
@@ -48,7 +48,7 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
                         .await?
                         .id;
                     all_category.insert(name.to_string(), new_category);
-                    info!("{name} Category does not exist. Creating new category. {new_category}");
+                    info!("'{name}' Category does not exist. Creating new category. {new_category}");
                     Some(new_category)
                 }
             }
@@ -97,7 +97,6 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
                         .permissions(remove_all_permissions(everyone_role.unwrap()))
                 })
                 .await?;
-                
         } else {
             // if channel roles is empty, collect the category roles for adding to the channel
             if let Some(cat_roles) = channel.get_category_roles() {
