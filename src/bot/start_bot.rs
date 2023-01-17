@@ -1,5 +1,5 @@
 use crate::bot::ChannelInfo;
-use crate::{create, help, start, example, setup};
+use crate::{create, example, help, setup, start};
 use serenity::async_trait;
 use serenity::builder::CreateButton;
 use serenity::framework::StandardFramework;
