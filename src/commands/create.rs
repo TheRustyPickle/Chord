@@ -1,10 +1,10 @@
+use crate::accept;
 use crate::bot::{ChannelInfo, ParsedData};
 use crate::parse::{parse_to_channel, parse_to_text};
-use crate::accept;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
-    CommandDataOption, CommandDataOptionValue, ApplicationCommandInteraction,
+    ApplicationCommandInteraction, CommandDataOption, CommandDataOptionValue,
 };
 use serenity::model::user::User;
 use serenity::prelude::*;
@@ -48,82 +48,90 @@ pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, St
 }
 
 pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_data: User) {
-    let interaction_message =
-        command.get_interaction_response(&ctx.http).await.unwrap();
+    let interaction_message = command.get_interaction_response(&ctx.http).await.unwrap();
     // create a interaction tracker to the message
     let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
 
     match interaction_reply {
         // start matching button id
-        Some(reply) => match reply.data.custom_id.as_str() {
-            "Accept" => {
-                info!(
-                    "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?}",
-                    command.data.name,
-                    user_data.name,
-                    user_data.discriminator,
-                    user_data.id.0,
-                    command.guild_id
-                );
-                reply
-                    .create_interaction_response(&ctx, |response| {
-                        response.interaction_response_data(|message| {
-                            message
+        Some(reply) => {
+            match reply.data.custom_id.as_str() {
+                "Accept" => {
+                    info!(
+                        "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?}",
+                        command.data.name,
+                        user_data.name,
+                        user_data.discriminator,
+                        user_data.id.0,
+                        command.guild_id
+                    );
+                    command
+                        .edit_original_interaction_response(&ctx, |response| {
+                            response
                                 .content("Command accepted. Execution will start now.")
-                                .ephemeral(true)
+                                .components(|comp| comp)
                         })
+                        .await
+                        .unwrap();
+
+                    // read the data that was saved inside the hashmap to get the channel data
+                    let get_channel_data_lock = {
+                        let handler_data_lock = ctx.data.read().await;
+                        handler_data_lock
+                            .get::<ParsedData>()
+                            .expect("Error fetching data")
+                            .clone()
+                    };
+                    let get_channel_data = { get_channel_data_lock.read().await };
+
+                    match accept::run(
+                        &get_channel_data[&user_data.id.0],
+                        command.guild_id.unwrap(),
+                        &ctx,
+                    )
+                    .await
+                    {
+                        Ok(_) => {
+                            command
+                                .edit_original_interaction_response(&ctx, |response| {
+                                    response
+                                        .content(format!("Command executed successfully"))
+                                        .components(|comp| comp)
+                                })
+                                .await
+                                .unwrap();
+                        }
+                        Err(err) => {
+                            info!("Error while doing Accept command. Error: {err}");
+                            command
+                    .edit_original_interaction_response(&ctx, |response| {
+                        response.content(format!("There was an error during the interaction. Error: {err}"))
+                        .components(|comp| {comp})
                     })
                     .await
                     .unwrap();
-
-                // read the data that was saved inside the hashmap to get the channel data
-                let get_channel_data_lock = {
-                    let handler_data_lock = ctx.data.read().await;
-                    handler_data_lock
-                        .get::<ParsedData>()
-                        .expect("Error fetching data")
-                        .clone()
-                };
-                let get_channel_data = { get_channel_data_lock.read().await };
-
-                match accept::run(
-                    &get_channel_data[&user_data.id.0],
-                    command.guild_id.unwrap(),
-                    &ctx,
-                )
-                .await
-                {
-                    Ok(_) => {}
-                    Err(err) => {
-                        info!("Error while doing Accept command. Error: {err}");
-                        command.channel_id.say(&ctx.http, format!("There was an error during the interaction. Error: {err}")).await.unwrap();
+                        }
                     }
                 }
+                "Reject" => {
+                    info!(
+                        "Used 'Reject' button on '{}' used by {}#{} with id {} on {:?}",
+                        command.data.name,
+                        user_data.name,
+                        user_data.discriminator,
+                        user_data.id.0,
+                        command.guild_id
+                    );
+                    // TODO delete data from hashmap
+                    // TODO move mutex reading to a separate function for quick access
+                    command
+                        .delete_original_interaction_response(&ctx)
+                        .await
+                        .unwrap();
+                }
+                _ => {}
             }
-            "Reject" => {
-                info!(
-                    "Used 'Reject' button on '{}' used by {}#{} with id {} on {:?}",
-                    command.data.name,
-                    user_data.name,
-                    user_data.discriminator,
-                    user_data.id.0,
-                    command.guild_id
-                );
-                reply
-                    .create_interaction_response(&ctx, |response| {
-                        response.interaction_response_data(|message| {
-                            message
-                                .content(
-                                    "Command abandoned. The message can be dismissed.",
-                                )
-                                .ephemeral(true)
-                        })
-                    })
-                    .await
-                    .unwrap();
-            }
-            _ => {}
-        },
+        }
         None => {}
     }
 }
