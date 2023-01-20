@@ -48,7 +48,9 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
                         .await?
                         .id;
                     all_category.insert(name.to_string(), new_category);
-                    info!("'{name}' Category does not exist. Creating new category. {new_category}");
+                    info!(
+                        "'{name}' Category does not exist. Creating new category. {new_category}"
+                    );
                     Some(new_category)
                 }
             }
