@@ -1,6 +1,7 @@
 use crate::accept;
-use crate::bot::{ChannelInfo, ParsedData};
+use crate::bot::ChannelInfo;
 use crate::parse::{parse_to_channel, parse_to_text};
+use crate::utility::get_locked_parsedata;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
@@ -75,17 +76,11 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         .unwrap();
 
                     // read the data that was saved inside the hashmap to get the channel data
-                    let get_channel_data_lock = {
-                        let handler_data_lock = ctx.data.read().await;
-                        handler_data_lock
-                            .get::<ParsedData>()
-                            .expect("Error fetching data")
-                            .clone()
-                    };
-                    let get_channel_data = { get_channel_data_lock.read().await };
+                    let channel_data_lock = get_locked_parsedata(&ctx).await;
+                    let channel_data = { channel_data_lock.read().await };
 
                     match accept::run(
-                        &get_channel_data[&user_data.id.0],
+                        &channel_data[&user_data.id.0],
                         command.guild_id.unwrap(),
                         &ctx,
                     )
@@ -123,7 +118,6 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         command.guild_id
                     );
                     // TODO delete data from hashmap
-                    // TODO move mutex reading to a separate function for quick access
                     command
                         .delete_original_interaction_response(&ctx)
                         .await

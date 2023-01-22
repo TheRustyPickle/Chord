@@ -1,4 +1,5 @@
-use crate::start_bot::{normal_button, ParsedData};
+use crate::bot::ParsedData;
+use crate::utility::normal_button;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::component::ButtonStyle;
 use serenity::model::prelude::interaction::application_command::{
@@ -22,10 +23,15 @@ pub fn run(_options: &[CommandDataOption]) -> String {
 
 pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_data: User) {
     let permission_list = [
-        "view channel",
-        "send message",
-        "manage channel",
-        "read message history",
+        "view Channel",
+        "Send Message",
+        "Manage Channel",
+        "Manage Permissions",
+        "Attach Files",
+        "Mention @everyone @here",
+        "Manage Message",
+        "Read Message History",
+        "Use Application Commands",
     ];
     for permission in permission_list {
         let followup_mess = command
@@ -42,6 +48,12 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         c.create_action_row(|row| {
                             row.add_button(normal_button("Yes For Both", ButtonStyle::Primary));
                             row.add_button(normal_button("No For Both", ButtonStyle::Primary))
+                        });
+                        c.create_action_row(|row| {
+                            row.add_button(normal_button(
+                                "Keep Default/Unchanged",
+                                ButtonStyle::Primary,
+                            ))
                         })
                     })
             })
@@ -60,7 +72,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         followup_mess.delete(&ctx.http).await.unwrap();
                     }
                 }
-            },
+            }
             None => {}
         }
     }

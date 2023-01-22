@@ -1,7 +1,7 @@
-use crate::bot::ChannelInfo;
+use crate::bot::ParsedData;
+use crate::utility::{get_locked_parsedata, normal_button};
 use crate::{create, example, help, setup, start};
 use serenity::async_trait;
-use serenity::builder::CreateButton;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
 use serenity::model::application::command::Command;
@@ -15,22 +15,6 @@ use std::env;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{error, info, instrument};
-
-pub struct ParsedData;
-
-// Save user id as key with channel data as value in the struct
-impl TypeMapKey for ParsedData {
-    type Value = Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>>;
-}
-
-// creates a button based on the style and the text that is passed
-pub fn normal_button(name: &str, style: ButtonStyle) -> CreateButton {
-    let mut b = CreateButton::default();
-    b.custom_id(name);
-    b.label(name);
-    b.style(style);
-    b
-}
 
 struct Handler;
 
@@ -81,10 +65,7 @@ impl EventHandler for Handler {
                     if let Ok(parsed) = parsing_status {
                         info!("Inserting parsed data: {parsed:#?}");
                         parse_success = true;
-                        let parsed_data_lock = {
-                            let read_data = ctx.data.read().await;
-                            read_data.get::<ParsedData>().unwrap().clone()
-                        };
+                        let parsed_data_lock = get_locked_parsedata(&ctx).await;
 
                         {
                             let mut parsed_data = parsed_data_lock.write().await;
