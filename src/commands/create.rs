@@ -59,12 +59,13 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
             match reply.data.custom_id.as_str() {
                 "Accept" => {
                     info!(
-                        "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?}",
+                        "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?} {}",
                         command.data.name,
                         user_data.name,
                         user_data.discriminator,
                         user_data.id.0,
-                        command.guild_id
+                        command.guild_id.unwrap().name(&ctx),
+                        command.guild_id.unwrap()
                     );
                     command
                         .edit_original_interaction_response(&ctx, |response| {

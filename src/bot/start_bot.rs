@@ -46,12 +46,13 @@ impl EventHandler for Handler {
             let user_data = command.user.clone();
 
             info!(
-                "Slash command '{}' used by {}#{} with id {} on {:?}",
+                "Slash command '{}' used by {}#{} with id {} on {:?} {}",
                 command.data.name,
                 user_data.name,
                 user_data.discriminator,
                 user_data.id.0,
-                command.guild_id
+                command.guild_id.unwrap().name(&ctx),
+                command.guild_id.unwrap()
             );
 
             let mut parse_success = false;
