@@ -15,5 +15,5 @@ impl TypeMapKey for ParsedData {
 pub struct PermissionData;
 
 impl TypeMapKey for PermissionData {
-    type Value = Arc<RwLock<HashMap<u64, Permissions>>>;
+    type Value = Arc<RwLock<HashMap<u64, HashMap<String, Permissions>>>>;
 }
