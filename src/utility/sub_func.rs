@@ -5,17 +5,18 @@ use serenity::model::Permissions;
 use serenity::prelude::*;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use std::collections::HashMap;
 
 pub async fn get_locked_parsedata(
     ctx: &Context,
-) -> Arc<RwLock<std::collections::HashMap<u64, Vec<ChannelInfo>>>> {
+) -> Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>> {
     let read_data = ctx.data.read().await;
     read_data.get::<ParsedData>().unwrap().clone()
 }
 
 pub async fn get_locked_permissiondata(
     ctx: &Context,
-) -> Arc<RwLock<std::collections::HashMap<u64, Permissions>>> {
+) -> Arc<RwLock<HashMap<u64, HashMap<String, Permissions>>>> {
     let read_data = ctx.data.read().await;
     read_data.get::<PermissionData>().unwrap().clone()
 }
