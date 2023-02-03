@@ -1,4 +1,5 @@
 use crate::bot::ChannelInfo;
+use crate::utility::get_locked_permissiondata;
 use serenity::model::channel::ChannelType;
 use serenity::model::channel::{PermissionOverwrite, PermissionOverwriteType};
 use serenity::model::id::{ChannelId, GuildId, RoleId};
@@ -8,7 +9,7 @@ use serenity::Error;
 use std::collections::HashMap;
 use tracing::info;
 
-pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> Result<(), Error> {
+pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context, user_id: u64) -> Result<(), Error> {
     let mut all_category = HashMap::new();
     let all_roles = guild_id.roles(&ctx.http).await?;
     let mut everyone_role = None;
@@ -69,9 +70,9 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
             }
 
             if channel.get_category_private() {
-                override_permissions_private(cat_id, role_ids, &ctx).await?
+                override_permissions_private(cat_id, role_ids, &ctx, &user_id).await?
             } else {
-                override_permissions_public(cat_id, role_ids, &ctx).await?
+                override_permissions_public(cat_id, role_ids, &ctx, &user_id).await?
             }
         }
 
@@ -135,9 +136,9 @@ pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context) -> R
 
         // send out permission based on whether the channel was selected private or public
         if channel.private != None || channel.get_category_private() {
-            override_permissions_private(created_channel.id, channel_roles, ctx).await?;
+            override_permissions_private(created_channel.id, channel_roles, ctx, &user_id).await?;
         } else {
-            override_permissions_public(created_channel.id, channel_roles, ctx).await?;
+            override_permissions_public(created_channel.id, channel_roles, ctx, &user_id).await?;
         }
     }
     Ok(())
@@ -147,16 +148,28 @@ async fn override_permissions_public(
     channel_id: ChannelId,
     roles: Vec<&RoleId>,
     ctx: &Context,
+    user_id: &u64
 ) -> Result<(), Error> {
-    let allow =
+    let mut allow =
         Permissions::SEND_MESSAGES | Permissions::VIEW_CHANNEL | Permissions::READ_MESSAGE_HISTORY;
-    let deny = Permissions::MENTION_EVERYONE
+    let mut deny = Permissions::MENTION_EVERYONE
         | Permissions::MANAGE_CHANNELS
         | Permissions::MANAGE_MESSAGES
         | Permissions::MANAGE_GUILD
         | Permissions::MANAGE_ROLES
         | Permissions::CREATE_PUBLIC_THREADS
         | Permissions::CREATE_PRIVATE_THREADS;
+
+    let locked_permissions = get_locked_permissiondata(ctx).await;
+
+    {
+        let saved_permissions = locked_permissions.read().await;
+        if saved_permissions.contains_key(user_id) {
+            allow = saved_permissions[user_id]["public_allow"];
+            deny = saved_permissions[user_id]["public_deny"];
+        }
+
+    }
 
     for role in roles {
         let overwrite = PermissionOverwrite {
@@ -174,10 +187,22 @@ async fn override_permissions_private(
     channel_id: ChannelId,
     roles: Vec<&RoleId>,
     ctx: &Context,
+    user_id: &u64
 ) -> Result<(), Error> {
-    let allow =
+    let mut allow =
         Permissions::SEND_MESSAGES | Permissions::VIEW_CHANNEL | Permissions::READ_MESSAGE_HISTORY;
-    let deny = Permissions::empty();
+    let mut deny = Permissions::empty();
+
+    let locked_permissions = get_locked_permissiondata(ctx).await;
+
+    {
+        let saved_permissions = locked_permissions.read().await;
+        if saved_permissions.contains_key(user_id) {
+            allow = saved_permissions[user_id]["private_allow"];
+            deny = saved_permissions[user_id]["private_deny"];
+        }
+
+    }
 
     for role in roles {
         let overwrite = PermissionOverwrite {
