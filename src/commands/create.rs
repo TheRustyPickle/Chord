@@ -84,6 +84,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         &channel_data[&user_data.id.0],
                         command.guild_id.unwrap(),
                         &ctx,
+                        user_data.id.0
                     )
                     .await
                     {
