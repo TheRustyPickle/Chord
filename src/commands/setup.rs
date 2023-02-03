@@ -1,4 +1,4 @@
-use crate::bot::PermissionData;
+use crate::utility::get_locked_permissiondata;
 use crate::utility::normal_button;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::component::ButtonStyle;
@@ -24,7 +24,7 @@ pub fn run(_options: &[CommandDataOption]) -> String {
 
 pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_data: User) {
     let perm_list = HashMap::from([
-        ("view Channel", Permissions::VIEW_CHANNEL),
+        ("View Channel", Permissions::VIEW_CHANNEL),
         ("Send Message", Permissions::SEND_MESSAGES),
         ("Manage Channel", Permissions::MANAGE_CHANNELS),
         ("Manage Roles", Permissions::MANAGE_ROLES),
@@ -34,6 +34,8 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
         ("Read Message History", Permissions::READ_MESSAGE_HISTORY),
         ("Use Application Commands", Permissions::USE_SLASH_COMMANDS),
     ]);
+
+    let user_id = user_data.id.0;
 
     let mut public_allow = Permissions::empty();
     let mut public_deny = Permissions::empty();
@@ -58,7 +60,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         });
                         c.create_action_row(|row| {
                             row.add_button(normal_button("Allow Public, Deny Private", ButtonStyle::Primary));
-                            row.add_button(normal_button("Deny Public Allow Private", ButtonStyle::Primary))
+                            row.add_button(normal_button("Deny Public, Allow Private", ButtonStyle::Primary))
                         });
                         c.create_action_row(|row| {
                             row.add_button(normal_button("Allow For Both", ButtonStyle::Primary));
@@ -84,7 +86,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                     "Selected '{reply_str}' for '{permission}' by {}#{} with id {} on guild {:?} {}",
                     user_data.name,
                     user_data.discriminator,
-                    user_data.id.0,
+                    user_id,
                     command.guild_id.unwrap().name(&ctx),
                     command.guild_id.unwrap()
                 );
@@ -107,7 +109,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         private_allow = private_allow.union(perm);
                     }
                     "Deny For Both" => {
-                        private_allow = private_allow.union(perm);
+                        public_deny = public_deny.union(perm);
                         private_deny = private_deny.union(perm);
                     }
 
@@ -116,5 +118,17 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
             }
             None => {}
         }
+    }
+
+    let locked_permission = get_locked_permissiondata(ctx).await;
+
+    {
+        let mut saved_permissions = locked_permission.write().await;
+        saved_permissions.insert(user_id, HashMap::from([
+            ("public_allow".to_string(), public_allow),
+            ("public_deny".to_string(), public_deny),
+            ("private_allow".to_string(), private_allow),
+            ("private_deny".to_string(), private_deny),
+        ]));
     }
 }
