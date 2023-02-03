@@ -1,4 +1,4 @@
-use crate::bot::ParsedData;
+use crate::bot::{ParsedData, PermissionData};
 use crate::utility::{get_locked_parsedata, normal_button};
 use crate::{create, example, help, setup, start};
 use serenity::async_trait;
@@ -152,6 +152,11 @@ pub async fn start_bot() {
         let mut data = client.data.write().await;
         data.insert::<ParsedData>(Arc::new(RwLock::new(HashMap::new())));
     }
+
+    {
+        let mut data = client.data.write().await;
+        data.insert::<PermissionData>(Arc::new(RwLock::new(HashMap::new())));
+    }    
 
     if let Err(why) = client.start().await {
         error!("Client error: {:?}", why);
