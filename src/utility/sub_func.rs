@@ -3,13 +3,11 @@ use serenity::builder::CreateButton;
 use serenity::model::application::component::ButtonStyle;
 use serenity::model::Permissions;
 use serenity::prelude::*;
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use std::collections::HashMap;
 
-pub async fn get_locked_parsedata(
-    ctx: &Context,
-) -> Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>> {
+pub async fn get_locked_parsedata(ctx: &Context) -> Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>> {
     let read_data = ctx.data.read().await;
     read_data.get::<ParsedData>().unwrap().clone()
 }

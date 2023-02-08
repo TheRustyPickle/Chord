@@ -124,11 +124,14 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
 
     {
         let mut saved_permissions = locked_permission.write().await;
-        saved_permissions.insert(user_id, HashMap::from([
-            ("public_allow".to_string(), public_allow),
-            ("public_deny".to_string(), public_deny),
-            ("private_allow".to_string(), private_allow),
-            ("private_deny".to_string(), private_deny),
-        ]));
+        saved_permissions.insert(
+            user_id,
+            HashMap::from([
+                ("public_allow".to_string(), public_allow),
+                ("public_deny".to_string(), public_deny),
+                ("private_allow".to_string(), private_allow),
+                ("private_deny".to_string(), private_deny),
+            ]),
+        );
     }
 }

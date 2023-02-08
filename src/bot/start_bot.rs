@@ -156,7 +156,7 @@ pub async fn start_bot() {
     {
         let mut data = client.data.write().await;
         data.insert::<PermissionData>(Arc::new(RwLock::new(HashMap::new())));
-    }    
+    }
 
     if let Err(why) = client.start().await {
         error!("Client error: {:?}", why);

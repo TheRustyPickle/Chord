@@ -9,7 +9,12 @@ use serenity::Error;
 use std::collections::HashMap;
 use tracing::info;
 
-pub async fn run(data: &Vec<ChannelInfo>, guild_id: GuildId, ctx: &Context, user_id: u64) -> Result<(), Error> {
+pub async fn run(
+    data: &Vec<ChannelInfo>,
+    guild_id: GuildId,
+    ctx: &Context,
+    user_id: u64,
+) -> Result<(), Error> {
     let mut all_category = HashMap::new();
     let all_roles = guild_id.roles(&ctx.http).await?;
     let mut everyone_role = None;
@@ -148,7 +153,7 @@ async fn override_permissions_public(
     channel_id: ChannelId,
     roles: Vec<&RoleId>,
     ctx: &Context,
-    user_id: &u64
+    user_id: &u64,
 ) -> Result<(), Error> {
     let mut allow =
         Permissions::SEND_MESSAGES | Permissions::VIEW_CHANNEL | Permissions::READ_MESSAGE_HISTORY;
@@ -168,7 +173,6 @@ async fn override_permissions_public(
             allow = saved_permissions[user_id]["public_allow"];
             deny = saved_permissions[user_id]["public_deny"];
         }
-
     }
 
     for role in roles {
@@ -187,7 +191,7 @@ async fn override_permissions_private(
     channel_id: ChannelId,
     roles: Vec<&RoleId>,
     ctx: &Context,
-    user_id: &u64
+    user_id: &u64,
 ) -> Result<(), Error> {
     let mut allow =
         Permissions::SEND_MESSAGES | Permissions::VIEW_CHANNEL | Permissions::READ_MESSAGE_HISTORY;
@@ -201,7 +205,6 @@ async fn override_permissions_private(
             allow = saved_permissions[user_id]["private_allow"];
             deny = saved_permissions[user_id]["private_deny"];
         }
-
     }
 
     for role in roles {
