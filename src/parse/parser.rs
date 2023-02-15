@@ -9,6 +9,7 @@ pub fn parse_input<'a>(
     let mut parsed_successfully = false;
 
     for _num in 0..collected_data.len() + 10 {
+        // TODO check empty at the bottom
         if input.is_empty() {
             parsed_successfully = true;
             break;
@@ -21,7 +22,7 @@ pub fn parse_input<'a>(
                 input = input.replace(data, "").trim().to_string();
                 let mut category_name = String::new();
                 for i in 1..splitted_data.len() {
-                    if !splitted_data[i].starts_with('-') {
+                    if !sensitive_string.contains(&splitted_data[i].as_str()) {
                         category_name.push_str(&splitted_data[i]);
                         category_name.push(' ');
                     } else {
@@ -52,17 +53,13 @@ pub fn parse_input<'a>(
                 }
                 role_input = role_input.trim().to_string();
 
-                let comma_splitted: Vec<String> =
-                    role_input.split(", ").map(|s| s.to_string()).collect();
+                let comma_splitted: Vec<&str> =
+                    role_input.split(",").collect();
 
                 let mut all_roles = Vec::new();
 
                 for role in comma_splitted {
-                    if !role.starts_with('-') {
-                        all_roles.push(role);
-                    } else {
-                        break;
-                    }
+                    all_roles.push(role.trim().to_string());
                 }
                 input = input.replace(&role_input, "").trim().to_string();
                 collected_data.insert("roles", all_roles);
