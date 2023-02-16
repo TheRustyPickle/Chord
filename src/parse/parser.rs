@@ -8,8 +8,10 @@ pub fn parse_input<'a>(
     let sensitive_string = ["-ch", "-cat", "-r", "-p", "-t"];
     let mut parsed_successfully = false;
 
-    for _num in 0..collected_data.len() + 10 {
-        // TODO check empty at the bottom
+    // The loop goes through each part of the string and once a part is parsed
+    // that part is removed from the string. So ideally, at the end the whole string should become empty.
+    // Using for loops here otherwise it will get struck if some part is not parsed.
+    for _num in 0..input.len() {
         if input.is_empty() {
             parsed_successfully = true;
             break;
@@ -19,7 +21,7 @@ pub fn parse_input<'a>(
         let data = &splitted_data[0];
         match data.trim() {
             "-cat" => {
-                input = input.replace(data, "").trim().to_string();
+                input = input.replacen(data, "", 1).trim().to_string();
                 let mut category_name = String::new();
                 for i in 1..splitted_data.len() {
                     if !sensitive_string.contains(&splitted_data[i].as_str()) {
@@ -30,7 +32,7 @@ pub fn parse_input<'a>(
                     }
                 }
                 category_name = category_name.trim().to_string();
-                input = input.replace(&category_name, "").trim().to_string();
+                input = input.replacen(&category_name, "", 1).trim().to_string();
                 collected_data.insert("category", vec![category_name]);
             }
 
@@ -61,36 +63,35 @@ pub fn parse_input<'a>(
                 for role in comma_splitted {
                     all_roles.push(role.trim().to_string());
                 }
-                input = input.replace(&role_input, "").trim().to_string();
+                input = input.replacen(&role_input, "", 1).trim().to_string();
                 collected_data.insert("roles", all_roles);
             }
             "-ch" => {
                 input = input.replacen(data, "", 1).trim().to_string();
-                let mut channels = Vec::new();
-                let mut separated: Vec<String> =
-                    input.split(" | ").map(|s| s.to_string()).collect();
+                let mut ch_found = 0;
 
-                for i in 0..separated.len() {
-                    let split: Vec<&str> = separated[i].split(' ').collect();
-                    if sensitive_string.contains(&split[0]) {
-                        separated.remove(i);
-                        break;
+                let separated_string: Vec<&str> = input.split(" ").collect();
+                let mut collected_channel_data = Vec::new();
+                let mut current_channel = String::new();
+                for sep in separated_string {
+                    match sep {
+                        "-cat" => break,
+                        "-ch" => {
+                            ch_found += 1;
+                            collected_channel_data.push(current_channel.trim().to_string());
+                            current_channel = String::new()
+                        }
+                        _ => current_channel.push_str(&format!("{sep} "))
                     }
                 }
-
-                let mut channel_input = String::new();
-                for i in 0..separated.len() {
-                    channel_input.push_str(&separated[i]);
-                    if i != separated.len() - 1 {
-                        channel_input.push_str(" | ");
-                    }
-
-                    channels.push(separated[i].to_owned())
+                if !current_channel.is_empty() {
+                    collected_channel_data.push(current_channel.trim().to_string());
                 }
-
-                input = input.replace(&channel_input, "").trim().to_string();
-
-                collected_data.insert("channels", channels);
+                for i in &collected_channel_data {
+                    input = input.replacen(i, "", 1).trim().to_string()
+                }
+                collected_data.insert("channels", collected_channel_data);
+                input = input.replacen("-ch", "", ch_found).trim().to_string();
             }
             "-t" => {
                 input = input.replacen(data, "", 1).trim().to_string();
@@ -99,7 +100,7 @@ pub fn parse_input<'a>(
                     "channel_type",
                     vec![channel_type.to_lowercase().to_string()],
                 );
-                input = input.replace(channel_type, "").trim().to_string();
+                input = input.replacen(channel_type, "", 1).trim().to_string();
             }
             _ => {}
         }
