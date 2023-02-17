@@ -27,3 +27,21 @@ pub fn normal_button(name: &str, style: ButtonStyle) -> CreateButton {
     b.style(style);
     b
 }
+
+pub fn polish_channel(name: String) -> String {
+    let mut output = String::new();
+    let mut last_char_was_hyphen = false;
+
+    for c in name.trim().chars() {
+        if c.is_whitespace() {
+            if !last_char_was_hyphen {
+                output.push('-');
+                last_char_was_hyphen = true;
+            }
+        } else {
+            output.push(c);
+            last_char_was_hyphen = false;
+        }
+    }
+    output
+}
