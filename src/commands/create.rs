@@ -9,7 +9,7 @@ use serenity::model::prelude::interaction::application_command::{
 };
 use serenity::model::user::User;
 use serenity::prelude::*;
-
+use serenity::Error;
 use tracing::{error, info, instrument};
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
@@ -48,10 +48,21 @@ pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, St
     }
 }
 
-pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_data: User) {
-    let interaction_message = command.get_interaction_response(&ctx.http).await.unwrap();
+pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_data: User) -> Result<(), Error> {
+    let interaction_message = command.get_interaction_response(&ctx.http).await?;
     // create a interaction tracker to the message
     let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
+
+    {
+        let channel_data_lock = get_locked_parsedata(&ctx).await;
+        let channel_data = channel_data_lock.read().await;
+        if !channel_data.contains_key(&user_data.id.0) {
+            // TODO: edit the message that no data is found
+            info!("Early cancelled");
+            return Ok(())
+        }
+    }
+    
 
     match interaction_reply {
         // start matching button id
@@ -73,8 +84,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                                 .content("Command accepted. Execution will start now.")
                                 .components(|comp| comp)
                         })
-                        .await
-                        .unwrap();
+                        .await?;
 
                     // read the data that was saved inside the hashmap to get the channel data
                     let channel_data_lock = get_locked_parsedata(&ctx).await;
@@ -95,8 +105,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                                         .content(format!("Command executed successfully"))
                                         .components(|comp| comp)
                                 })
-                                .await
-                                .unwrap();
+                                .await?;
                         }
                         Err(err) => {
                             info!("Error while doing Accept command. Error: {err}");
@@ -105,8 +114,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         response.content(format!("There was an error during the interaction. Error: {err}"))
                         .components(|comp| {comp})
                     })
-                    .await
-                    .unwrap();
+                    .await?;
                         }
                     }
                 }
@@ -119,15 +127,26 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         user_data.id.0,
                         command.guild_id
                     );
-                    // TODO delete data from hashmap
+
+                    let parsed_data_lock = get_locked_parsedata(&ctx).await;
+
+                    {
+                        let mut parsed_data = parsed_data_lock.write().await;
+                        if parsed_data.contains_key(&user_data.id.0) {
+                            parsed_data.remove(&user_data.id.0);
+                        }
+                    }
+
                     command
                         .delete_original_interaction_response(&ctx)
-                        .await
-                        .unwrap();
+                        .await?;
+
+                    
                 }
                 _ => {}
             }
         }
         None => {}
     }
+    Ok(())
 }
