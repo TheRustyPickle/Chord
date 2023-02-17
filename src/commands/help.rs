@@ -10,9 +10,9 @@ pub fn run(_options: &[CommandDataOption]) -> String {
     
 Examples:
 
--cat first category -r members, verified -ch channel-1 -t ann -r admin, verified | channel-2 -p
+-cat first category -r members, verified -ch channel-1 -t ann -r admin, verified -ch channel-2 -p
 
--cat third category -r cm, mods, administrator, -p -ch channel-3 -t text -r discord, bots | channel-4
+-cat third category -r cm, mods, administrator, -p -ch channel-3 -t text -r discord, bots -ch channel-4
 
 Parameters:
 
@@ -34,7 +34,6 @@ Rules:
     - If -p or -r are passed after -cat, any -ch after it will follow the rules of the category
     - Supported values: -r, -p, -ch
 -r:
-    - Can be passed both after -cat or -ch. Example: -cat category -r role -ch channel-1 -r role 2
     - If -r is passed after -ch, it will overwrite -r inside the -cat
     - @everyone as a role can be passed to overwrite -p flag of a -cat
     - Multiple roles can be given after -r. Must be separated by comma + space. Example: -ch channel -r role 1, role 2, role 3
@@ -44,7 +43,7 @@ Rules:
     - If -r is passed alongside -p, only the given role will get access
 -ch:
     - Channel name can be as long as necessary
-    - Channel names must be separated by | + space. Example: -ch channel | channel-2
+    - Use -ch multiple times to create a new channel. -ch one -p -ch another
     - If -ch is placed after -cat, it will follow -cat rules
     - If -cat is not found, it will be created without a category
     - Supported values: -r, -p, -t
