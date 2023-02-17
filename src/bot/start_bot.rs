@@ -108,11 +108,16 @@ impl EventHandler for Handler {
                 })
                 .await
                 .unwrap();
-
-            if parse_success {
-                create::setup(&ctx, command, user_data).await;
-            } else if command.data.name == "setup" {
-                setup::setup(&ctx, command, user_data).await;
+                
+            match command.data.name.as_str() {
+                "create" => {
+                    if parse_success {
+                        create::setup(&ctx, command, user_data).await.unwrap_or_else(|e| error!("Error acquired on command 'Create': {e}"))
+                    }
+                    // TODO: if failed, edit the message to something else
+                }
+                "setup" => setup::setup(&ctx, command, user_data).await,
+                _ => {}
             }
         }
     }
