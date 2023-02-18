@@ -8,6 +8,7 @@ use serenity::model::prelude::interaction::application_command::{
 use serenity::model::user::User;
 use serenity::model::Permissions;
 use serenity::prelude::*;
+use serenity::Error;
 use std::collections::HashMap;
 use tracing::info;
 
@@ -22,7 +23,11 @@ pub fn run(_options: &[CommandDataOption]) -> String {
         .to_string()
 }
 
-pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_data: User) {
+pub async fn setup(
+    ctx: &Context,
+    command: &ApplicationCommandInteraction,
+    user_data: User,
+) -> Result<(), Error> {
     let perm_list = HashMap::from([
         ("View Channel", Permissions::VIEW_CHANNEL),
         ("Send Message", Permissions::SEND_MESSAGES),
@@ -74,8 +79,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         })
                     })
             })
-            .await
-            .unwrap();
+            .await?;
 
         let followup_reply = followup_mess.await_component_interaction(&ctx).await;
         match followup_reply {
@@ -90,7 +94,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                     command.guild_id.unwrap().name(&ctx),
                     command.guild_id.unwrap()
                 );
-                followup_mess.delete(&ctx.http).await.unwrap();
+                followup_mess.delete(&ctx.http).await?;
                 match reply_str {
                     "Allow For Public" => public_allow = public_allow.union(perm),
                     "Allow For Private" => private_allow = private_allow.union(perm),
@@ -134,4 +138,5 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
             ]),
         );
     }
+    Ok(())
 }
