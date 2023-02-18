@@ -1,11 +1,14 @@
 use crate::bot::{ChannelInfo, ParsedData, PermissionData};
 use serenity::builder::CreateButton;
 use serenity::model::application::component::ButtonStyle;
-use serenity::model::Permissions;
+use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
+use serenity::model::prelude::*;
 use serenity::prelude::*;
+use serenity::Error;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use tracing::error;
 
 pub async fn get_locked_parsedata(ctx: &Context) -> Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>> {
     let read_data = ctx.data.read().await;
@@ -44,4 +47,35 @@ pub fn polish_channel(name: String) -> String {
         }
     }
     output
+}
+
+pub async fn handle_error(
+    ctx: &Context,
+    command: &ApplicationCommandInteraction,
+    result: Result<(), Error>,
+) {
+    if let Err(e) = result {
+        error!("Error acquired on command '{}': {e:?}", command.data.name);
+        command
+            .edit_original_interaction_response(&ctx, |response| {
+                response
+                    .content(format!(
+                        "There was an error during the interaction. Error: {e:?}"
+                    ))
+                    .components(|comp| comp)
+            })
+            .await
+            .unwrap();
+    }
+}
+
+pub async fn get_guild_name(ctx: &Context, guild_id: GuildId) -> Option<String> {
+    if let Some(guild) = guild_id.to_guild_cached(&ctx.cache) {
+        return Some(guild.name);
+    }
+
+    if let Ok(guild) = guild_id.to_partial_guild(&ctx.http).await {
+        return Some(guild.name);
+    }
+    Some("Not Found".to_string())
 }
