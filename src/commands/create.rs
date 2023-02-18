@@ -1,7 +1,7 @@
 use crate::accept;
 use crate::bot::ChannelInfo;
 use crate::parse::{parse_to_channel, parse_to_text};
-use crate::utility::get_locked_parsedata;
+use crate::utility::{get_guild_name, get_locked_parsedata};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::prelude::interaction::application_command::{
@@ -26,7 +26,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         })
 }
 
-#[instrument]
+#[instrument(level = "debug")]
 pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, String) {
     let resolved = options
         .get(0)
@@ -48,36 +48,59 @@ pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, St
     }
 }
 
-pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_data: User) -> Result<(), Error> {
+pub async fn setup(
+    ctx: &Context,
+    command: &ApplicationCommandInteraction,
+    user_data: User,
+) -> Result<(), Error> {
     let interaction_message = command.get_interaction_response(&ctx.http).await?;
     // create a interaction tracker to the message
     let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
+
+    let mut data_not_found = false;
 
     {
         let channel_data_lock = get_locked_parsedata(&ctx).await;
         let channel_data = channel_data_lock.read().await;
         if !channel_data.contains_key(&user_data.id.0) {
-            // TODO: edit the message that no data is found
-            info!("Early cancelled");
-            return Ok(())
+            info!(
+                "{}#{} with id {} tried to use a button on '{}' command. No user data found",
+                user_data.name, user_data.discriminator, user_data.id.0, command.data.name,
+            );
+            data_not_found = true;
         }
     }
-    
+
+    if data_not_found {
+        command
+            .edit_original_interaction_response(&ctx, |response| {
+                response
+                    .content(format!(
+                        "Command interaction cancelled due to insufficient data"
+                    ))
+                    .components(|comp| comp)
+            })
+            .await?;
+        return Ok(());
+    }
 
     match interaction_reply {
         // start matching button id
         Some(reply) => {
+            info!(
+                "Used '{}' button on '{}' used by {}#{} with id {} on guild {} with id {}",
+                reply.data.custom_id,
+                command.data.name,
+                user_data.name,
+                user_data.discriminator,
+                user_data.id.0,
+                get_guild_name(&ctx, command.guild_id.unwrap())
+                    .await
+                    .unwrap(),
+                command.guild_id.unwrap()
+            );
             match reply.data.custom_id.as_str() {
                 "Accept" => {
-                    info!(
-                        "Used 'Accept' button on '{}' used by {}#{} with id {} on {:?} {}",
-                        command.data.name,
-                        user_data.name,
-                        user_data.discriminator,
-                        user_data.id.0,
-                        command.guild_id.unwrap().name(&ctx),
-                        command.guild_id.unwrap()
-                    );
                     command
                         .edit_original_interaction_response(&ctx, |response| {
                             response
@@ -119,15 +142,6 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                     }
                 }
                 "Reject" => {
-                    info!(
-                        "Used 'Reject' button on '{}' used by {}#{} with id {} on {:?}",
-                        command.data.name,
-                        user_data.name,
-                        user_data.discriminator,
-                        user_data.id.0,
-                        command.guild_id
-                    );
-
                     let parsed_data_lock = get_locked_parsedata(&ctx).await;
 
                     {
@@ -137,11 +151,7 @@ pub async fn setup(ctx: &Context, command: ApplicationCommandInteraction, user_d
                         }
                     }
 
-                    command
-                        .delete_original_interaction_response(&ctx)
-                        .await?;
-
-                    
+                    command.delete_original_interaction_response(&ctx).await?;
                 }
                 _ => {}
             }
