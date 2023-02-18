@@ -1,5 +1,5 @@
 use crate::bot::{ParsedData, PermissionData};
-use crate::utility::{get_locked_parsedata, normal_button};
+use crate::utility::{get_guild_name, get_locked_parsedata, handle_error, normal_button};
 use crate::{create, example, help, setup, start};
 use serenity::async_trait;
 use serenity::framework::StandardFramework;
@@ -48,12 +48,14 @@ impl EventHandler for Handler {
             let user_data = command.user.clone();
 
             info!(
-                "Slash command '{}' used by {}#{} with id {} on {:?} {}",
+                "Slash command '{}' used by {}#{} with id {} on guild {} with id {}",
                 command.data.name,
                 user_data.name,
                 user_data.discriminator,
                 user_data.id.0,
-                command.guild_id.unwrap().name(&ctx),
+                get_guild_name(&ctx, command.guild_id.unwrap())
+                    .await
+                    .unwrap(),
                 command.guild_id.unwrap()
             );
 
@@ -114,13 +116,22 @@ impl EventHandler for Handler {
             match command.data.name.as_str() {
                 "create" => {
                     if parse_success {
-                        create::setup(&ctx, command, user_data)
-                            .await
-                            .unwrap_or_else(|e| error!("Error acquired on command 'Create': {e}"))
+                        handle_error(
+                            &ctx,
+                            &command,
+                            create::setup(&ctx, &command, user_data).await,
+                        )
+                        .await;
                     }
-                    // TODO: if failed, edit the message to something else
                 }
-                "setup" => setup::setup(&ctx, command, user_data).await,
+                "setup" => {
+                    handle_error(
+                        &ctx,
+                        &command,
+                        setup::setup(&ctx, &command, user_data).await,
+                    )
+                    .await
+                }
                 _ => {}
             }
         }
