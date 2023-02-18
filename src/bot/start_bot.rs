@@ -14,7 +14,9 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{error, info, instrument};
+use tracing::{debug, error, info, instrument};
+use tracing_subscriber::filter::LevelFilter;
+use tracing_subscriber::EnvFilter;
 
 struct Handler;
 
@@ -40,7 +42,7 @@ impl EventHandler for Handler {
         info!("The bot is online");
     }
 
-    //#[instrument(skip(self, ctx))]
+    #[instrument(level = "debug", skip(self, ctx))]
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
             let user_data = command.user.clone();
@@ -64,7 +66,7 @@ impl EventHandler for Handler {
 
                     // if channel data properly acquired, unlock struct value, write the channel data in hashmap and close
                     if let Ok(parsed) = parsing_status {
-                        info!("Inserting parsed data: {parsed:#?}");
+                        debug!("Inserting parsed data: {parsed:#?}");
                         parse_success = true;
                         let parsed_data_lock = get_locked_parsedata(&ctx).await;
 
@@ -108,11 +110,13 @@ impl EventHandler for Handler {
                 })
                 .await
                 .unwrap();
-                
+
             match command.data.name.as_str() {
                 "create" => {
                     if parse_success {
-                        create::setup(&ctx, command, user_data).await.unwrap_or_else(|e| error!("Error acquired on command 'Create': {e}"))
+                        create::setup(&ctx, command, user_data)
+                            .await
+                            .unwrap_or_else(|e| error!("Error acquired on command 'Create': {e}"))
                     }
                     // TODO: if failed, edit the message to something else
                 }
@@ -122,10 +126,25 @@ impl EventHandler for Handler {
         }
     }
 }
-#[instrument]
+#[instrument(level = "debug")]
 pub async fn start_bot() {
     // initialize trace logging
-    tracing_subscriber::fmt::init();
+    let mut env_filter = EnvFilter::from_default_env();
+    if let Ok(level) = std::env::var("RUST_LOG") {
+        if level == "debug" {
+            env_filter = env_filter
+                .add_directive(format!("{}=debug", env!("CARGO_PKG_NAME")).parse().unwrap())
+                .add_directive(LevelFilter::ERROR.into())
+                .add_directive(LevelFilter::INFO.into());
+        }
+    } else {
+        env_filter = env_filter.add_directive(LevelFilter::INFO.into());
+    }
+    let subscriber = tracing_subscriber::fmt()
+        .with_env_filter(env_filter)
+        .finish();
+    tracing::subscriber::set_global_default(subscriber).unwrap();
+
     // get the bot token from environment
     let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
 
