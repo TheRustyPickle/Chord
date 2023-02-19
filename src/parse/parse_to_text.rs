@@ -94,9 +94,7 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
                 channel_name.push_str(&word);
             }
 
-            let channel = channel
-                .replace(&channel_name, "")
-                .trim().to_string();
+            let channel = channel.replace(&channel_name, "").trim().to_string();
 
             let channel_name = polish_channel(channel_name);
 

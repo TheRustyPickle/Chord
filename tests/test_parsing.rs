@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 #[test]
 fn test_parse_1() {
-    let data = "-cat category name -p -r admin, team member -ch channel-1 -r another role, third role | channel-2 | channel-3".to_string();
+    let data = "-cat category name -p -r admin, team member -ch channel-1 -r another role, third role -ch channel-2 -ch channel-3".to_string();
 
     let expected_data = HashMap::from([
         ("category", vec!["category name".to_string()]),
@@ -66,7 +66,7 @@ fn test_parse_2() {
 
     assert_eq!(expected_data, parsed_data.unwrap());
 
-    let data = "-ch my-channel | channel-2".to_string();
+    let data = "-ch my-channel -ch channel-2".to_string();
     let parsed_data = parse_input(data);
 
     let expected_data = HashMap::from([(
