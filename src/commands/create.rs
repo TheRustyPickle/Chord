@@ -10,7 +10,7 @@ use serenity::model::prelude::interaction::application_command::{
 use serenity::model::user::User;
 use serenity::prelude::*;
 use serenity::Error;
-use tracing::{error, info, instrument};
+use tracing::{error, info};
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
@@ -26,7 +26,6 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
         })
 }
 
-#[instrument(level = "debug")]
 pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, String) {
     let resolved = options
         .get(0)
@@ -111,27 +110,30 @@ pub async fn setup(
 
                     // read the data that was saved inside the hashmap to get the channel data
                     let channel_data_lock = get_locked_parsedata(&ctx).await;
-                    let channel_data = { channel_data_lock.read().await };
+                    let channel_data = channel_data_lock.read().await;
 
-                    match accept::run(
+                    let accept_run = accept::run(
                         &channel_data[&user_data.id.0],
                         command.guild_id.unwrap(),
                         &ctx,
                         user_data.id.0,
                     )
-                    .await
-                    {
+                    .await;
+
+                    drop(channel_data);
+
+                    match accept_run {
                         Ok(_) => {
                             command
                                 .edit_original_interaction_response(&ctx, |response| {
                                     response
-                                        .content(format!("Command executed successfully"))
+                                        .content("Command executed successfully")
                                         .components(|comp| comp)
                                 })
                                 .await?;
                         }
                         Err(err) => {
-                            info!("Error while doing Accept command. Error: {err}");
+                            error!("Error while doing Accept command. Error: {err}");
                             command
                     .edit_original_interaction_response(&ctx, |response| {
                         response.content(format!("There was an error during the interaction. Error: {err}"))
