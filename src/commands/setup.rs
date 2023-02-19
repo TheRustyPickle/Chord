@@ -1,5 +1,4 @@
-use crate::utility::get_locked_permissiondata;
-use crate::utility::normal_button;
+use crate::utility::{get_guild_name, get_locked_permissiondata, get_perm_list, normal_button};
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::application::component::ButtonStyle;
 use serenity::model::prelude::interaction::application_command::{
@@ -28,17 +27,7 @@ pub async fn setup(
     command: &ApplicationCommandInteraction,
     user_data: User,
 ) -> Result<(), Error> {
-    let perm_list = HashMap::from([
-        ("View Channel", Permissions::VIEW_CHANNEL),
-        ("Send Message", Permissions::SEND_MESSAGES),
-        ("Manage Channel", Permissions::MANAGE_CHANNELS),
-        ("Manage Roles", Permissions::MANAGE_ROLES),
-        ("Attach Files", Permissions::ATTACH_FILES),
-        ("Mention @everyone @here", Permissions::MENTION_EVERYONE),
-        ("Manage Message", Permissions::MANAGE_MESSAGES),
-        ("Read Message History", Permissions::READ_MESSAGE_HISTORY),
-        ("Use Application Commands", Permissions::USE_SLASH_COMMANDS),
-    ]);
+    let perm_list = get_perm_list();
 
     let user_id = user_data.id.0;
 
@@ -91,7 +80,7 @@ pub async fn setup(
                     user_data.name,
                     user_data.discriminator,
                     user_id,
-                    command.guild_id.unwrap().name(&ctx),
+                    get_guild_name(&ctx, command.guild_id.unwrap()).await,
                     command.guild_id.unwrap()
                 );
                 followup_mess.delete(&ctx.http).await?;
@@ -138,5 +127,11 @@ pub async fn setup(
             ]),
         );
     }
+
+    command
+        .edit_original_interaction_response(&ctx, |resp| {
+            resp.content("Permission setup complete. This will be persisted across guilds.")
+        })
+        .await?;
     Ok(())
 }
