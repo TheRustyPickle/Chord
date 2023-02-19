@@ -79,3 +79,17 @@ pub async fn get_guild_name(ctx: &Context, guild_id: GuildId) -> Option<String> 
     }
     Some("Not Found".to_string())
 }
+
+pub fn get_perm_list<'a>() -> HashMap<&'a str, Permissions> {
+    HashMap::from([
+        ("View Channel", Permissions::VIEW_CHANNEL),
+        ("Send Message", Permissions::SEND_MESSAGES),
+        ("Manage Channel", Permissions::MANAGE_CHANNELS),
+        ("Manage Roles", Permissions::MANAGE_ROLES),
+        ("Attach Files", Permissions::ATTACH_FILES),
+        ("Mention @everyone @here", Permissions::MENTION_EVERYONE),
+        ("Manage Message", Permissions::MANAGE_MESSAGES),
+        ("Read Message History", Permissions::READ_MESSAGE_HISTORY),
+        ("Use Application Commands", Permissions::USE_SLASH_COMMANDS),
+    ])
+}

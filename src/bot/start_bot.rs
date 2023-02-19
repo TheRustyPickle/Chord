@@ -1,6 +1,6 @@
 use crate::bot::{ParsedData, PermissionData};
 use crate::utility::{get_guild_name, get_locked_parsedata, handle_error, normal_button};
-use crate::{create, example, help, setup, start};
+use crate::{check_setup, create, example, help, setup, start};
 use serenity::async_trait;
 use serenity::framework::StandardFramework;
 use serenity::http::Http;
@@ -14,7 +14,7 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, instrument};
+use tracing::{debug, error, info};
 use tracing_subscriber::filter::LevelFilter;
 use tracing_subscriber::EnvFilter;
 
@@ -31,6 +31,7 @@ impl EventHandler for Handler {
                 .create_application_command(|command| start::register(command))
                 .create_application_command(|command| example::register(command))
                 .create_application_command(|command| setup::register(command))
+                .create_application_command(|command| check_setup::register(command))
         })
         .await;
 
@@ -42,7 +43,6 @@ impl EventHandler for Handler {
         info!("The bot is online");
     }
 
-    #[instrument(level = "debug", skip(self, ctx))]
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
             let user_data = command.user.clone();
@@ -85,6 +85,9 @@ impl EventHandler for Handler {
                 "start" => start::run(&command.data.options),
                 "example" => example::run(&command.data.options),
                 "setup" => setup::run(&command.data.options),
+                "check_setup" => {
+                    check_setup::run(&command.data.options, &ctx, user_data.id.0).await
+                }
                 _ => "Command not found".to_string(),
             };
 
@@ -137,7 +140,7 @@ impl EventHandler for Handler {
         }
     }
 }
-#[instrument(level = "debug")]
+
 pub async fn start_bot() {
     // initialize trace logging
     let mut env_filter = EnvFilter::from_default_env();
