@@ -15,6 +15,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
     command
         .name("setup")
         .description("Setup the default permissions for channels")
+        .dm_permission(false)
 }
 
 pub fn run(_options: &[CommandDataOption]) -> String {
