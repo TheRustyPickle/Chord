@@ -16,7 +16,9 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
     command
         .name("create")
         .description("Command for creating channels")
+        // remove command from working in dm
         .dm_permission(false)
+        // add the option to accept a string
         .create_option(|option| {
             option
                 .name("string")
@@ -27,15 +29,19 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
 }
 
 pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, String) {
+    // get the actual string that was passed with the command
     let resolved = options
         .get(0)
         .expect("Some value")
         .resolved
         .as_ref()
         .expect("Some value");
+
     if let CommandDataOptionValue::String(value) = resolved {
         info!("'Create' parsing data detected: {value}");
 
+        // Parse the command string into more readable version which is the reply to the command
+        // then parse again into struct for the program with work with
         let reply_string = parse_to_text(value.to_string());
         (parse_to_channel(value.to_string()), reply_string)
     } else {
@@ -59,6 +65,8 @@ pub async fn setup(
     let mut data_not_found = false;
 
     {
+        // if reject button is used before the interaction, user data gets deleted from the memory
+        // prevent progressing if data was not found or deleted
         let channel_data_lock = get_locked_parsedata(&ctx).await;
         let channel_data = channel_data_lock.read().await;
         if !channel_data.contains_key(&user_data.id.0) {
@@ -108,10 +116,11 @@ pub async fn setup(
                         })
                         .await?;
 
-                    // read the data that was saved inside the hashmap to get the channel data
+                    // Get the channel data sent by the user
                     let channel_data_lock = get_locked_parsedata(&ctx).await;
                     let channel_data = channel_data_lock.read().await;
 
+                    // channel creation happens here
                     let accept_run = accept::run(
                         &channel_data[&user_data.id.0],
                         command.guild_id.unwrap(),
@@ -120,6 +129,7 @@ pub async fn setup(
                     )
                     .await;
 
+                    // drop the read lock
                     drop(channel_data);
 
                     match accept_run {
@@ -128,6 +138,7 @@ pub async fn setup(
                                 .edit_original_interaction_response(&ctx, |response| {
                                     response
                                         .content("Command executed successfully")
+                                        // empty component so the button disappears
                                         .components(|comp| comp)
                                 })
                                 .await?;
@@ -135,11 +146,12 @@ pub async fn setup(
                         Err(err) => {
                             error!("Error while doing Accept command. Error: {err}");
                             command
-                    .edit_original_interaction_response(&ctx, |response| {
-                        response.content(format!("There was an error during the interaction. Error: {err}"))
-                        .components(|comp| {comp})
-                    })
-                    .await?;
+                            .edit_original_interaction_response(&ctx, |response| {
+                                response.content(format!("There was an error during the interaction. Error: {err}"))
+                                // empty component so the button disappears
+                                .components(|comp| {comp})
+                            })
+                            .await?;
                         }
                     }
                 }
@@ -147,6 +159,7 @@ pub async fn setup(
                     let parsed_data_lock = get_locked_parsedata(&ctx).await;
 
                     {
+                        // remove the user data
                         let mut parsed_data = parsed_data_lock.write().await;
                         if parsed_data.contains_key(&user_data.id.0) {
                             parsed_data.remove(&user_data.id.0);

@@ -28,6 +28,7 @@ pub async fn setup(
     command: &ApplicationCommandInteraction,
     user_data: User,
 ) -> Result<(), Error> {
+    // get the permission list
     let perm_list = get_perm_list();
 
     let user_id = user_data.id.0;
@@ -37,6 +38,7 @@ pub async fn setup(
     let mut private_allow = Permissions::empty();
     let mut private_deny = Permissions::empty();
 
+    // loop through all permissions -> send a message -> wait for a reply -> delete message
     for (permission, perm) in perm_list {
         let followup_mess = command
             .create_followup_message(&ctx.http, |message| {
@@ -117,6 +119,7 @@ pub async fn setup(
     let locked_permission = get_locked_permissiondata(ctx).await;
 
     {
+        // save the permission data that was collected
         let mut saved_permissions = locked_permission.write().await;
         saved_permissions.insert(
             user_id,

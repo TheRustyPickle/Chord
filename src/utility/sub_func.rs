@@ -10,11 +10,13 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::error;
 
+/// returns the locked state of ParsedData struct
 pub async fn get_locked_parsedata(ctx: &Context) -> Arc<RwLock<HashMap<u64, Vec<ChannelInfo>>>> {
     let read_data = ctx.data.read().await;
     read_data.get::<ParsedData>().unwrap().clone()
 }
 
+/// returns the locked state of PermissionData struct
 pub async fn get_locked_permissiondata(
     ctx: &Context,
 ) -> Arc<RwLock<HashMap<u64, HashMap<String, Permissions>>>> {
@@ -22,7 +24,7 @@ pub async fn get_locked_permissiondata(
     read_data.get::<PermissionData>().unwrap().clone()
 }
 
-// creates a button based on the style and the text that is passed
+/// creates a button based on the style and the string that is passed
 pub fn normal_button(name: &str, style: ButtonStyle) -> CreateButton {
     let mut b = CreateButton::default();
     b.custom_id(name);
@@ -31,7 +33,8 @@ pub fn normal_button(name: &str, style: ButtonStyle) -> CreateButton {
     b
 }
 
-pub fn polish_channel(name: String) -> String {
+/// Replaces all spaces with dash and makes sure two dash is never together
+pub fn polish_channel(name: &str) -> String {
     let mut output = String::new();
     let mut last_char_was_hyphen = false;
 
@@ -49,6 +52,7 @@ pub fn polish_channel(name: String) -> String {
     output
 }
 
+/// Handles error from interactions that require extra steps
 pub async fn handle_error(
     ctx: &Context,
     command: &ApplicationCommandInteraction,
@@ -69,6 +73,7 @@ pub async fn handle_error(
     }
 }
 
+/// Tries to get guild name from GuildId
 pub async fn get_guild_name(ctx: &Context, guild_id: GuildId) -> Option<String> {
     if let Some(guild) = guild_id.to_guild_cached(&ctx.cache) {
         return Some(guild.name);
@@ -80,6 +85,7 @@ pub async fn get_guild_name(ctx: &Context, guild_id: GuildId) -> Option<String> 
     Some("Not Found".to_string())
 }
 
+/// Returns the list of permissions used for /setup
 pub fn get_perm_list<'a>() -> HashMap<&'a str, Permissions> {
     HashMap::from([
         ("View Channel", Permissions::VIEW_CHANNEL),

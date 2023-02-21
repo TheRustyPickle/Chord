@@ -24,7 +24,7 @@ Parameters:
 
 -ch: Highlights a Channel
 
--t: Highlights the Channel type. Optional
+-t: Highlights a Channel type. Optional
 
 Rules:
 

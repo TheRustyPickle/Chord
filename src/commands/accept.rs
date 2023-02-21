@@ -40,10 +40,7 @@ pub async fn run(
                 // check if the previously acquired category lists contain the category where this channel is supposed to be
                 // If not found, create a new category with the provided name
                 if all_category.contains_key(name) {
-                    info!(
-                        "'{name}' Category already exists. {}",
-                        all_category[name]
-                    );
+                    info!("'{name}' Category already exists. {}", all_category[name]);
                     Some(all_category[name])
                 } else {
                     let new_category = GuildId(guild_id.0)
@@ -108,7 +105,7 @@ pub async fn run(
 
         let mut channel_roles = vec![];
 
-        // if we have to override permissions from what was set in category or add separate roles for a channel, 
+        // if we have to override permissions from what was set in category or add separate roles for a channel,
         // remove all permissions that has been added when creating the channel
         if channel.roles != None {
             created_channel

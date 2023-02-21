@@ -33,6 +33,7 @@ pub fn parse_to_text(mut unparsed: String) -> String {
 }
 
 fn channel_text(channel_data: HashMap<&str, Vec<String>>) -> String {
+    // to get data specifically from -ch + arguments part of the string
     let mut full_text = String::new();
 
     if channel_data.contains_key("roles") {
@@ -86,17 +87,18 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
         for channel in &data["channels"] {
             let mut channel_name: String = String::new();
 
+            // example string: -ch something 1 2 3 -p -r one, two three
+            // start from something and continue until -p -r or something is hit
             for word in channel.split(' ').collect::<Vec<&str>>() {
                 if SENSITIVE_STRING.contains(&word) {
                     break;
                 }
-
                 channel_name.push_str(&word);
             }
 
+            // replace channel name so what remains is -p -r one, two three
             let channel = channel.replace(&channel_name, "").trim().to_string();
-
-            let channel_name = polish_channel(channel_name);
+            let channel_name = polish_channel(&channel_name);
 
             full_text.push_str(&format!("    {channel_name}: "));
 

@@ -13,9 +13,11 @@ pub async fn run(_options: &[CommandDataOption], ctx: &Context, user_id: u64) ->
     {
         let locked_permissiondata = get_locked_permissiondata(&ctx).await;
         let permissiondata = locked_permissiondata.read().await;
+
+        // look for if the user already used /setup for permissions
         if permissiondata.contains_key(&user_id) {
             let mut reply_text = String::new();
-            let perm_list = get_perm_list();
+            let perm_list = get_perm_list(); // returns a list of permissions used in /setup
 
             for (perm_type, perm) in &permissiondata[&user_id] {
                 reply_text.push_str(&format!("{perm_type} : **{perm}**\n\n"));
@@ -25,6 +27,8 @@ pub async fn run(_options: &[CommandDataOption], ctx: &Context, user_id: u64) ->
             reply_text = reply_text.replace("public_deny", "Denied for Public Channel");
             reply_text = reply_text.replace("private_deny", "Denied for Private Channel");
 
+            // perm list contains the serenity Permission and a readable version of the permission.
+            // Replace serenity permission with a more readable text version
             for (perm_str, perm) in perm_list {
                 reply_text = reply_text.replace(&format!("{perm}"), perm_str)
             }
@@ -32,5 +36,6 @@ pub async fn run(_options: &[CommandDataOption], ctx: &Context, user_id: u64) ->
         }
     }
 
+    // default text if /setup was not used by the user
     "You have not setup any permissions. Use /setup to do so.".to_string()
 }

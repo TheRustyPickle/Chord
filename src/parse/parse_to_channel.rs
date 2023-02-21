@@ -1,6 +1,7 @@
 use crate::bot::{CategoryInfo, ChannelInfo};
 use crate::parse::parse_input;
 use std::collections::HashMap;
+use crate::utility::polish_channel;
 
 const SENSITIVE_STRING: [&str; 5] = ["-ch", "-cat", "-r", "-p", "-t"];
 
@@ -57,25 +58,26 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
 
             let mut channel_name_unparsed = String::new();
 
+            // channel data will be like this: channel name -r something -p
+            // so keep going -r -p -cat or something is found, make that the channel name
+
             for word in channel.split(' ').collect::<Vec<&str>>() {
                 if SENSITIVE_STRING.contains(&word) {
-                    break;
-                }
-                if word.starts_with("|") {
                     break;
                 }
 
                 channel_name_unparsed.push_str(&format!(" {word}"));
             }
             channel_name_unparsed = channel_name_unparsed.trim().to_string();
+            let channel_name = polish_channel(&channel_name_unparsed);
 
-            let channel_name = channel_name_unparsed.replace(" ", "-");
-
+            // remove channel name from channel name -r something -p to work with the rest 
             let channel = channel
                 .replace(&channel_name_unparsed, "")
                 .trim()
                 .to_string();
 
+            // if nothing after channel name, this can be empty
             if !channel.is_empty() {
                 let parsed_channel = parse_input(channel.to_string());
                 match parsed_channel {
