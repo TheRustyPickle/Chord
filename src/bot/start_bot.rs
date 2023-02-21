@@ -45,6 +45,7 @@ impl EventHandler for Handler {
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
+            // contains various user data
             let user_data = command.user.clone();
 
             info!(
@@ -116,6 +117,7 @@ impl EventHandler for Handler {
                 .await
                 .unwrap();
 
+            // further interaction from the command is handled from here
             match command.data.name.as_str() {
                 "create" => {
                     if parse_success {
@@ -143,6 +145,8 @@ impl EventHandler for Handler {
 
 pub async fn start_bot() {
     // initialize trace logging
+    // if RUST_LOG=debug is passed, enable debug logging for current package only and accept all info and error logs
+    // Otherwise, only info level logging is enabled
     let mut env_filter = EnvFilter::from_default_env();
     if let Ok(level) = std::env::var("RUST_LOG") {
         if level == "debug" {
@@ -198,5 +202,6 @@ pub async fn start_bot() {
 
     if let Err(why) = client.start().await {
         error!("Client error: {:?}", why);
+        std::process::exit(1);
     }
 }
