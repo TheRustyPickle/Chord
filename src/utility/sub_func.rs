@@ -88,7 +88,6 @@ pub async fn get_guild_name(ctx: &Context, guild_id: GuildId) -> Option<String> 
 /// Returns the list of permissions used for /setup
 pub fn get_perm_list<'a>() -> HashMap<&'a str, Permissions> {
     HashMap::from([
-        ("View Channel", Permissions::VIEW_CHANNEL),
         ("Send Message", Permissions::SEND_MESSAGES),
         ("Manage Channel", Permissions::MANAGE_CHANNELS),
         ("Manage Roles", Permissions::MANAGE_ROLES),
