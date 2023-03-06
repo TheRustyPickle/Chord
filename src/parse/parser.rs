@@ -21,7 +21,6 @@ pub fn parse_input<'a>(
         let data = &splitted_data[0];
         debug!("Splitted data status: {splitted_data:?}\nCurrently checking: {data}");
         match data.trim() {
-
             // replacen is used everywhere because if a very large string is passed, the same words can be inside
             // multiple times. So only want to replace the part we are working on now
             // trim is used frequently because extra space mistake is not something uncommon
@@ -55,7 +54,7 @@ pub fn parse_input<'a>(
 
                 let mut role_input = String::new();
 
-                // -r some, something -p -ch 
+                // -r some, something -p -ch
                 // continue until another flag is hit
                 for i in 1..splitted_data.len() {
                     if !sensitive_string.contains(&splitted_data[i].as_str()) {
@@ -70,9 +69,10 @@ pub fn parse_input<'a>(
                 role_input = role_input.trim().to_string();
 
                 // now split by comma and each of them are now 1 role
-                let all_roles: Vec<String> = role_input.split(",").map(|s| {
-                    s.trim().to_string()
-                }).collect();
+                let all_roles: Vec<String> = role_input
+                    .split(",")
+                    .map(|s| s.trim().to_string())
+                    .collect();
 
                 input = input.replacen(&role_input, "", 1).trim().to_string();
                 info!("Roles parsed: {all_roles:?}");

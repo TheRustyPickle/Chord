@@ -1,7 +1,7 @@
 use crate::bot::{CategoryInfo, ChannelInfo};
 use crate::parse::parse_input;
-use std::collections::HashMap;
 use crate::utility::polish_channel;
+use std::collections::HashMap;
 
 const SENSITIVE_STRING: [&str; 5] = ["-ch", "-cat", "-r", "-p", "-t"];
 
@@ -71,7 +71,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
             channel_name_unparsed = channel_name_unparsed.trim().to_string();
             let channel_name = polish_channel(&channel_name_unparsed);
 
-            // remove channel name from channel name -r something -p to work with the rest 
+            // remove channel name from channel name -r something -p to work with the rest
             let channel = channel
                 .replace(&channel_name_unparsed, "")
                 .trim()
