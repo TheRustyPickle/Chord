@@ -38,7 +38,7 @@ pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, St
         .expect("Some value");
 
     if let CommandDataOptionValue::String(value) = resolved {
-        info!("'Create' parsing data detected: {value}");
+        info!("'create' parsing data detected: {value}");
 
         // Parse the command string into more readable version which is the reply to the command
         // then parse again into struct for the program with work with
@@ -47,7 +47,7 @@ pub fn run(options: &[CommandDataOption]) -> (Result<Vec<ChannelInfo>, &str>, St
     } else {
         error!("Failed to get any parsing value. {resolved:?}");
         (
-            Err("Failed to get values. "),
+            Err("Failed to get values."),
             "No value was given. Parsing will happen here".to_string(),
         )
     }
@@ -60,14 +60,16 @@ pub async fn setup(
 ) -> Result<(), Error> {
     let interaction_message = command.get_interaction_response(&ctx.http).await?;
     // create a interaction tracker to the message
-    let interaction_reply = interaction_message.await_component_interaction(&ctx).await;
+    let interaction_reply = interaction_message.await_component_interaction(ctx).await;
 
     let mut data_not_found = false;
+
+    let guild_id = command.guild_id.unwrap_or(0.into());
 
     {
         // if reject button is used before the interaction, user data gets deleted from the memory
         // prevent progressing if data was not found or deleted
-        let channel_data_lock = get_locked_parsedata(&ctx).await;
+        let channel_data_lock = get_locked_parsedata(ctx).await;
         let channel_data = channel_data_lock.read().await;
         if !channel_data.contains_key(&user_data.id.0) {
             info!(
@@ -82,96 +84,91 @@ pub async fn setup(
         command
             .edit_original_interaction_response(&ctx, |response| {
                 response
-                    .content(format!(
-                        "Command interaction cancelled due to insufficient data"
-                    ))
+                    .content("Command interaction cancelled due to insufficient data".to_string())
                     .components(|comp| comp)
             })
             .await?;
         return Ok(());
     }
 
-    match interaction_reply {
-        // start matching button id
-        Some(reply) => {
-            info!(
-                "Used '{}' button on '{}' used by {}#{} with id {} on guild {} with id {}",
-                reply.data.custom_id,
-                command.data.name,
-                user_data.name,
-                user_data.discriminator,
-                user_data.id.0,
-                get_guild_name(&ctx, command.guild_id.unwrap())
-                    .await
-                    .unwrap(),
-                command.guild_id.unwrap()
-            );
-            match reply.data.custom_id.as_str() {
-                "Accept" => {
-                    command
-                        .edit_original_interaction_response(&ctx, |response| {
-                            response
-                                .content("Command accepted. Execution will start now.")
-                                .components(|comp| comp)
-                        })
-                        .await?;
+    if let Some(reply) = interaction_reply {
+        info!(
+            "Used '{}' button on '{}' used by {}#{} with id {} on guild {} with id {}",
+            reply.data.custom_id,
+            command.data.name,
+            user_data.name,
+            user_data.discriminator,
+            user_data.id.0,
+            get_guild_name(ctx, guild_id).await,
+            guild_id
+        );
+        match reply.data.custom_id.as_str() {
+            "Accept" => {
+                command
+                    .edit_original_interaction_response(&ctx, |response| {
+                        response
+                            .content("Command accepted. Execution will start now.")
+                            .components(|comp| comp)
+                    })
+                    .await?;
 
-                    // Get the channel data sent by the user
-                    let channel_data_lock = get_locked_parsedata(&ctx).await;
-                    let channel_data = channel_data_lock.read().await;
+                // Get the channel data sent by the user
+                let channel_data_lock = get_locked_parsedata(ctx).await;
+                let channel_data = channel_data_lock.read().await;
 
-                    // channel creation happens here
-                    let accept_run = accept::run(
-                        &channel_data[&user_data.id.0],
-                        command.guild_id.unwrap(),
-                        &ctx,
-                        user_data.id.0,
-                    )
-                    .await;
+                // channel creation happens here
+                let accept_run = accept::run(
+                    &channel_data[&user_data.id.0],
+                    guild_id,
+                    ctx,
+                    user_data.id.0,
+                )
+                .await;
 
-                    // drop the read lock
-                    drop(channel_data);
+                // drop the read lock
+                drop(channel_data);
 
-                    match accept_run {
-                        Ok(_) => {
-                            command
-                                .edit_original_interaction_response(&ctx, |response| {
-                                    response
-                                        .content("Command executed successfully")
-                                        // empty component so the button disappears
-                                        .components(|comp| comp)
-                                })
-                                .await?;
-                        }
-                        Err(err) => {
-                            error!("Error while doing Accept command. Error: {err}");
-                            command
+                match accept_run {
+                    Ok(_) => {
+                        command
                             .edit_original_interaction_response(&ctx, |response| {
-                                response.content(format!("There was an error during the interaction. Error: {err}"))
-                                // empty component so the button disappears
-                                .components(|comp| {comp})
+                                response
+                                    .content("Command executed successfully")
+                                    // empty component so the button disappears
+                                    .components(|comp| comp)
                             })
                             .await?;
-                        }
+                    }
+                    Err(err) => {
+                        error!("Error while doing Accept command. Error: {err}");
+                        command
+                            .edit_original_interaction_response(&ctx, |response| {
+                                response
+                                    .content(format!(
+                                        "There was an error during the interaction. Error: {err}"
+                                    ))
+                                    // empty component so the button disappears
+                                    .components(|comp| comp)
+                            })
+                            .await?;
                     }
                 }
-                "Reject" => {
-                    let parsed_data_lock = get_locked_parsedata(&ctx).await;
-
-                    {
-                        // remove the user data
-                        let mut parsed_data = parsed_data_lock.write().await;
-                        if parsed_data.contains_key(&user_data.id.0) {
-                            parsed_data.remove(&user_data.id.0);
-                        }
-                    }
-
-                    command.delete_original_interaction_response(&ctx).await?;
-                }
-                _ => {}
             }
+            "Reject" => {
+                let parsed_data_lock = get_locked_parsedata(ctx).await;
+
+                {
+                    // remove the user data
+                    let mut parsed_data = parsed_data_lock.write().await;
+                    if parsed_data.contains_key(&user_data.id.0) {
+                        parsed_data.remove(&user_data.id.0);
+                    }
+                }
+
+                command.delete_original_interaction_response(&ctx).await?;
+            }
+            _ => {}
         }
-        None => {}
     }
     Ok(())
 }

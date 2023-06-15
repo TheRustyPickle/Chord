@@ -73,46 +73,44 @@ pub async fn setup(
             })
             .await?;
 
-        let followup_reply = followup_mess.await_component_interaction(&ctx).await;
-        match followup_reply {
-            Some(reply) => {
-                let reply_str = reply.data.custom_id.as_str();
+        let followup_reply = followup_mess.await_component_interaction(ctx).await;
+        if let Some(reply) = followup_reply {
+            let reply_str = reply.data.custom_id.as_str();
 
-                info!(
-                    "Selected '{reply_str}' for '{permission}' by {}#{} with id {} on guild {:?} {}",
-                    user_data.name,
-                    user_data.discriminator,
-                    user_id,
-                    get_guild_name(&ctx, command.guild_id.unwrap()).await,
-                    command.guild_id.unwrap()
-                );
-                followup_mess.delete(&ctx.http).await?;
-                match reply_str {
-                    "Allow For Public" => public_allow = public_allow.union(perm),
-                    "Allow For Private" => private_allow = private_allow.union(perm),
-                    "Deny For Public" => public_deny = public_deny.union(perm),
-                    "Deny For Private" => private_deny = private_deny.union(perm),
-                    "Allow Public, Deny Private" => {
-                        public_allow = public_allow.union(perm);
-                        private_deny = private_deny.union(perm);
-                    }
-                    "Deny Public Allow Private" => {
-                        public_deny = public_deny.union(perm);
-                        private_allow = private_allow.union(perm);
-                    }
-                    "Allow For Both" => {
-                        public_allow = public_allow.union(perm);
-                        private_allow = private_allow.union(perm);
-                    }
-                    "Deny For Both" => {
-                        public_deny = public_deny.union(perm);
-                        private_deny = private_deny.union(perm);
-                    }
+            let guild_id = command.guild_id.unwrap_or(0.into());
 
-                    _ => {}
+            info!(
+                "Selected '{reply_str}' for '{permission}' by {} with id {} on guild {:?} {}",
+                user_data.name,
+                user_id,
+                get_guild_name(ctx, guild_id).await,
+                guild_id
+            );
+            followup_mess.delete(&ctx.http).await?;
+            match reply_str {
+                "Allow For Public" => public_allow = public_allow.union(perm),
+                "Allow For Private" => private_allow = private_allow.union(perm),
+                "Deny For Public" => public_deny = public_deny.union(perm),
+                "Deny For Private" => private_deny = private_deny.union(perm),
+                "Allow Public, Deny Private" => {
+                    public_allow = public_allow.union(perm);
+                    private_deny = private_deny.union(perm);
                 }
+                "Deny Public, Allow Private" => {
+                    public_deny = public_deny.union(perm);
+                    private_allow = private_allow.union(perm);
+                }
+                "Allow For Both" => {
+                    public_allow = public_allow.union(perm);
+                    private_allow = private_allow.union(perm);
+                }
+                "Deny For Both" => {
+                    public_deny = public_deny.union(perm);
+                    private_deny = private_deny.union(perm);
+                }
+
+                _ => {}
             }
-            None => {}
         }
     }
 

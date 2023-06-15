@@ -16,47 +16,45 @@ Examples:
 
 Parameters:
 
--cat: Highlights a category
+**-cat:** Highlights a category
 
--r: Highlights an existing Role/s inside the guild. Optional
+**-r:** Highlights an existing Role/s inside the guild
 
--p: Recognizes a Channel or a Category to be as Private. Optional
+**-p:** Recognizes a Channel or a Category to be as Private
 
--ch: Highlights a Channel
+**-ch:** Highlights a Channel
 
--t: Highlights a Channel type. Optional
+**-t:** Highlights a Channel type
 
-Rules:
+**-cat:** 
+    • Category name can be as long as necessary
+    • If no -ch is given after -cat, the category will not be created
+    • If -p or -r are passed after -cat, any -ch after it will follow the rules of the category
+    • Supported values: -r, -p, -ch
+**-ch:**
+    • Channel name can be as long as necessary
+    • Use -ch multiple times to create more channels. Example: -ch channel-1 -p -ch another channel
+    • If -ch is placed after -cat, it will follow -cat rules
+    • If -cat is not found, it will be created without a category
+    • Supported values: -r, -p, -t
+**-r:**
+    • If -r is passed after -ch, it will overwrite -r inside the -cat
+    • @everyone as a role can be passed to overwrite -p flag of a -cat
+    • Multiple roles can be given after -r. Must be separated by comma + space. Example: -ch channel -r role 1, role 2, role 3
+**-p:**
+    • If -p is passed after -cat, the Category will be private
+    • If -p is passed after -ch, the Channel will private
+    • If -r is passed alongside -p, only the given roles will get access
+**-t:**
+    • Should be used after -ch
+    • 'text' = Text channel. Default value
+    • 'voice' = Voice channel
+    • 'ann' = Announcement/News Channel
+    • If not is passed, defaults to Text channel
 
--cat: 
-    - Category name can be as long as necessary
-    - If no -ch is given after -cat, the category will not be created
-    - If -p or -r are passed after -cat, any -ch after it will follow the rules of the category
-    - Supported values: -r, -p, -ch
--r:
-    - If -r is passed after -ch, it will overwrite -r inside the -cat
-    - @everyone as a role can be passed to overwrite -p flag of a -cat
-    - Multiple roles can be given after -r. Must be separated by comma + space. Example: -ch channel -r role 1, role 2, role 3
--p:
-    - If -p is passed after -cat, the Category will be private
-    - If -p is passed after -ch, the Channel will private
-    - If -r is passed alongside -p, only the given role will get access
--ch:
-    - Channel name can be as long as necessary
-    - Use -ch multiple times to create a new channel. -ch one -p -ch another
-    - If -ch is placed after -cat, it will follow -cat rules
-    - If -cat is not found, it will be created without a category
-    - Supported values: -r, -p, -t
--t:
-    - Should be used after -ch
-    - 'text' = Text channel. Default value
-    - 'voice' = Voice channel
-    - 'ann' = Announcement/News Channel
-    - If not is passed, Text channel.
-
-Recommended Steps:
-
-    - Create the necessary roles before using /create
-    - Line breaks are supported
-    - Divide each category with channels with line breaks to simplify".to_string()
+**Recommended Steps:**
+    • Create the necessary roles before using /create
+    • Line breaks are supported
+    • Divide each category with channels with line breaks to simplify
+    • See /examples to get an idea on how to use".to_string()
 }

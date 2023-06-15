@@ -25,6 +25,7 @@ pub async fn run(
             everyone_role = Some(role_id)
         }
     }
+    let everyone_role = everyone_role.unwrap();
 
     // collect all categories of the guild so we don't create the same category twice later
     let all_guild_channels = ctx.http.get_channels(guild_id.0).await?;
@@ -49,7 +50,7 @@ pub async fn run(
 
                             // if the category is selected to be private, edit and remove view permission
                             if channel.get_category_private() {
-                                c.permissions(do_private(everyone_role.unwrap()));
+                                c.permissions(do_private(everyone_role));
                             }
                             c
                         })
@@ -80,9 +81,9 @@ pub async fn run(
 
             // based on whether -p was highlighted after -cat or not, make it private or public
             if channel.get_category_private() {
-                override_permissions_private(cat_id, role_ids, &ctx, &user_id).await?
+                override_permissions_private(cat_id, role_ids, ctx, &user_id).await?
             } else {
-                override_permissions_public(cat_id, role_ids, &ctx, &user_id).await?
+                override_permissions_public(cat_id, role_ids, ctx, &user_id).await?
             }
         }
 
@@ -107,16 +108,16 @@ pub async fn run(
 
         // if we have to override permissions from what was set in category or add separate roles for a channel,
         // remove all permissions that has been added when creating the channel
-        if channel.roles != None {
+        if channel.roles.is_some() {
             created_channel
                 .id
                 .edit(&ctx.http, |c| {
                     c.name(&channel.channel)
-                        .permissions(remove_all_permissions(everyone_role.unwrap()))
+                        .permissions(remove_all_permissions(everyone_role))
                 })
                 .await?;
         } else {
-            // if channel roles is empty, collect the category roles for adding to the channel
+            // if channel role is empty, collect the category roles for adding to the channel
             if let Some(cat_roles) = channel.get_category_roles() {
                 for (role_id, role) in all_roles.iter() {
                     if cat_roles.contains(&role.name) {
@@ -129,12 +130,12 @@ pub async fn run(
 
         // if either the channel or the category is private, make the channel private
         // this also removes all roles if any added to the channel
-        if channel.private != None || channel.get_category_private() {
+        if channel.private.is_some() || channel.get_category_private() {
             created_channel
                 .id
                 .edit(&ctx.http, |c| {
                     c.name(&channel.channel)
-                        .permissions(do_private(everyone_role.unwrap()))
+                        .permissions(do_private(everyone_role))
                 })
                 .await?;
         }
@@ -150,7 +151,7 @@ pub async fn run(
         }
 
         // send out permission based on whether the channel was selected private or public
-        if channel.private != None || channel.get_category_private() {
+        if channel.private.is_some() || channel.get_category_private() {
             override_permissions_private(created_channel.id, channel_roles, ctx, &user_id).await?;
         } else {
             override_permissions_public(created_channel.id, channel_roles, ctx, &user_id).await?;

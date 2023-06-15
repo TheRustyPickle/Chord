@@ -12,9 +12,9 @@ pub fn run(_options: &[CommandDataOption]) -> String {
     
 Following commands are available
     
-/help : Shows how to use this bot and parameters that are recognized
-/create : Accepts a string that is parsed into categories and channels
-/example : Get some examples of what kind of commands are recognized
-/setup : Setup permissions for channels
-/check_setup : Shows the permission that was set".to_string()
+**/create:** Accepts a string that is parsed for creating categories and channels
+**/setup:** Setup permissions for guilds
+**/check_setup:** Shows the permission that was set
+**/help:** Shows how to use this bot and parameters that are recognized
+**/example:** Get some examples of what kind of commands are recognized".to_string()
 }
