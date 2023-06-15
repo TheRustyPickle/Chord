@@ -1,9 +1,7 @@
 use crate::bot::{CategoryInfo, ChannelInfo};
-use crate::parse::parse_input;
+use crate::parse::{parse_input, SENSITIVE_STRING};
 use crate::utility::polish_channel;
 use std::collections::HashMap;
-
-const SENSITIVE_STRING: [&str; 5] = ["-ch", "-cat", "-r", "-p", "-t"];
 
 pub fn parse_to_channel<'a>(mut unparsed: String) -> Result<Vec<ChannelInfo>, &'a str> {
     unparsed = unparsed.trim().replace('\n', " ");
@@ -39,7 +37,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
     let mut all_channels: Vec<ChannelInfo> = Vec::new();
 
     if data.contains_key("category") && !data["category"][0].is_empty() {
-        let mut cu_category = CategoryInfo::default();
+        let mut cu_category = CategoryInfo::new();
         cu_category.update_name(&data["category"][0]);
 
         if data.contains_key("roles") {
@@ -54,7 +52,7 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
 
     if data.contains_key("channels") {
         for channel in &data["channels"] {
-            let mut channel_data = ChannelInfo::default();
+            let mut channel_data = ChannelInfo::new();
 
             let mut channel_name_unparsed = String::new();
 

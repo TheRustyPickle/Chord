@@ -74,20 +74,20 @@ pub async fn handle_error(
 }
 
 /// Tries to get guild name from GuildId
-pub async fn get_guild_name(ctx: &Context, guild_id: GuildId) -> Option<String> {
+pub async fn get_guild_name(ctx: &Context, guild_id: GuildId) -> String {
     if let Some(guild) = guild_id.to_guild_cached(&ctx.cache) {
-        return Some(guild.name);
+        return guild.name;
     }
 
     if let Ok(guild) = guild_id.to_partial_guild(&ctx.http).await {
-        return Some(guild.name);
+        return guild.name;
     }
-    Some("Not Found".to_string())
+    "Not Found".to_string()
 }
 
 /// Returns the list of permissions used for /setup
-pub fn get_perm_list<'a>() -> HashMap<&'a str, Permissions> {
-    HashMap::from([
+pub fn get_perm_list<'a>() -> Vec<(&'a str, Permissions)> {
+    vec![
         ("Send Message", Permissions::SEND_MESSAGES),
         ("Manage Channel", Permissions::MANAGE_CHANNELS),
         ("Manage Roles", Permissions::MANAGE_ROLES),
@@ -96,5 +96,5 @@ pub fn get_perm_list<'a>() -> HashMap<&'a str, Permissions> {
         ("Manage Message", Permissions::MANAGE_MESSAGES),
         ("Read Message History", Permissions::READ_MESSAGE_HISTORY),
         ("Use Application Commands", Permissions::USE_SLASH_COMMANDS),
-    ])
+    ]
 }

@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 use tracing::{debug, error, info};
+
+pub const SENSITIVE_STRING: [&str; 5] = ["-ch", "-cat", "-r", "-p", "-t"];
+
 pub fn parse_input<'a>(
     mut input: String,
 ) -> Result<HashMap<&'a str, Vec<String>>, HashMap<&'a str, Vec<String>>> {
     let mut collected_data = HashMap::new();
 
-    let sensitive_string = ["-ch", "-cat", "-r", "-p", "-t"];
     let mut parsed_successfully = false;
+    info!("Starting parsing: {input}");
 
     // The loop goes through each part of the string and once a part is parsed
     // that part is removed from the string. So ideally, at the end the whole string should become empty.
@@ -30,22 +33,22 @@ pub fn parse_input<'a>(
 
                 // -cat category name -p -r some, something
                 // start from -cat until another flag is hit to get category name
-                for i in 1..splitted_data.len() {
-                    if !sensitive_string.contains(&splitted_data[i].as_str()) {
-                        category_name.push_str(&splitted_data[i]);
+                for item in splitted_data.iter().skip(1) {
+                    if !SENSITIVE_STRING.contains(&item.as_str()) {
+                        category_name.push_str(item);
                         category_name.push(' ');
                     } else {
                         break;
                     }
                 }
                 category_name = category_name.trim().to_string();
-                info!("Category parsed: {category_name}");
+                debug!("Category parsed: {category_name}");
                 input = input.replacen(&category_name, "", 1).trim().to_string();
                 collected_data.insert("category", vec![category_name]);
             }
 
             "-p" => {
-                info!("Private flag parsed");
+                debug!("Private flag parsed");
                 input = input.replacen(data, "", 1).trim().to_string();
                 collected_data.insert("private", vec!["true".to_string()]);
             }
@@ -56,9 +59,9 @@ pub fn parse_input<'a>(
 
                 // -r some, something -p -ch
                 // continue until another flag is hit
-                for i in 1..splitted_data.len() {
-                    if !sensitive_string.contains(&splitted_data[i].as_str()) {
-                        role_input.push_str(&splitted_data[i]);
+                for item in splitted_data.iter().skip(1) {
+                    if !SENSITIVE_STRING.contains(&item.as_str()) {
+                        role_input.push_str(item);
                         role_input.push(' ');
                     } else {
                         break;
@@ -70,12 +73,12 @@ pub fn parse_input<'a>(
 
                 // now split by comma and each of them are now 1 role
                 let all_roles: Vec<String> = role_input
-                    .split(",")
+                    .split(',')
                     .map(|s| s.trim().to_string())
                     .collect();
 
                 input = input.replacen(&role_input, "", 1).trim().to_string();
-                info!("Roles parsed: {all_roles:?}");
+                debug!("Roles parsed: {all_roles:?}");
                 collected_data.insert("roles", all_roles);
             }
             "-ch" => {
@@ -86,7 +89,7 @@ pub fn parse_input<'a>(
                 input = input.replacen(data, "", 1).trim().to_string();
                 let mut ch_found = 0;
 
-                let separated_string: Vec<&str> = input.split(" ").collect();
+                let separated_string: Vec<&str> = input.split(' ').collect();
                 let mut collected_channel_data = Vec::new();
                 let mut current_channel = String::new();
                 for sep in separated_string {
@@ -112,7 +115,7 @@ pub fn parse_input<'a>(
                 for i in &collected_channel_data {
                     input = input.replacen(i, "", 1).trim().to_string()
                 }
-                info!("Channel parsed: {collected_channel_data:?}");
+                debug!("Channel parsed: {collected_channel_data:?}");
                 collected_data.insert("channels", collected_channel_data);
 
                 // because of the previous ch count, we now know how many -ch to remove
@@ -127,7 +130,7 @@ pub fn parse_input<'a>(
                     "channel_type",
                     vec![channel_type.to_lowercase().to_string()],
                 );
-                info!("Channel Type parsed: {channel_type}");
+                debug!("Channel Type parsed: {channel_type}");
                 input = input.replacen(channel_type, "", 1).trim().to_string();
             }
             _ => {}

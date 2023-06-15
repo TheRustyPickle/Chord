@@ -9,7 +9,7 @@ pub struct ChannelInfo {
 }
 
 impl ChannelInfo {
-    pub fn default() -> Self {
+    pub fn new() -> Self {
         ChannelInfo {
             category: None,
             channel: String::new(),
@@ -81,7 +81,7 @@ pub struct CategoryInfo {
 }
 
 impl CategoryInfo {
-    pub fn default() -> Self {
+    pub fn new() -> Self {
         CategoryInfo {
             category: "None".to_string(),
             roles: None,

@@ -1,8 +1,6 @@
-use crate::parse::parse_input;
+use crate::parse::{parse_input, SENSITIVE_STRING};
 use crate::utility::polish_channel;
 use std::collections::HashMap;
-
-const SENSITIVE_STRING: [&str; 5] = ["-ch", "-cat", "-r", "-p", "-t"];
 
 pub fn parse_to_text(mut unparsed: String) -> String {
     let mut full_text = String::from("These data were detected\n\n");
@@ -26,8 +24,6 @@ pub fn parse_to_text(mut unparsed: String) -> String {
                 full_text.push_str("\nError acquired in the upper section")
             }
         }
-
-        full_text.push('\n')
     }
     full_text
 }
@@ -50,9 +46,9 @@ fn channel_text(channel_data: HashMap<&str, Vec<String>>) -> String {
     }
     if channel_data.contains_key("channel_type") {
         match channel_data["channel_type"][0].as_str() {
-            "text" => full_text.push_str(&format!("Channel Type: Text")),
-            "voice" => full_text.push_str(&format!("Channel Type: voice")),
-            "ann" => full_text.push_str(&format!("Channel Type: Announcement")),
+            "text" => full_text.push_str("Channel Type: Text"),
+            "voice" => full_text.push_str("Channel Type: voice"),
+            "ann" => full_text.push_str("Channel Type: Announcement"),
             _ => {}
         }
     }
@@ -93,7 +89,7 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
                 if SENSITIVE_STRING.contains(&word) {
                     break;
                 }
-                channel_name.push_str(&word);
+                channel_name.push_str(word);
             }
 
             // replace channel name so what remains is -p -r one, two three
