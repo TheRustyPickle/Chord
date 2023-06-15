@@ -1,24 +1,16 @@
-use crate::bot::{ParsedData, PermissionData};
 use crate::utility::{get_guild_name, get_locked_parsedata, handle_error, normal_button};
 use crate::{check_setup, create, example, help, setup, start};
 use serenity::async_trait;
-use serenity::framework::StandardFramework;
-use serenity::http::Http;
 use serenity::model::application::command::Command;
 use serenity::model::application::component::ButtonStyle;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
-use serenity::model::prelude::*;
 use serenity::prelude::*;
-use std::collections::{HashMap, HashSet};
-use std::env;
-use std::sync::Arc;
-use tokio::sync::RwLock;
 use tracing::{debug, error, info};
-use tracing_subscriber::filter::LevelFilter;
-use tracing_subscriber::EnvFilter;
 
-struct Handler;
+// TODO add sqlite db support for saving data
+
+pub struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -48,16 +40,14 @@ impl EventHandler for Handler {
             // contains various user data
             let user_data = command.user.clone();
 
+            let guild_id = command.guild_id.unwrap_or(0.into());
             info!(
-                "Slash command '{}' used by {}#{} with id {} on guild {} with id {}",
+                "Slash command '{}' used by {} with id {} on guild {} with id {}",
                 command.data.name,
                 user_data.name,
-                user_data.discriminator,
                 user_data.id.0,
-                get_guild_name(&ctx, command.guild_id.unwrap())
-                    .await
-                    .unwrap(),
-                command.guild_id.unwrap()
+                get_guild_name(&ctx, guild_id).await,
+                guild_id
             );
 
             let mut parse_success = false;
@@ -140,68 +130,5 @@ impl EventHandler for Handler {
                 _ => {}
             }
         }
-    }
-}
-
-pub async fn start_bot() {
-    // initialize trace logging
-    // if RUST_LOG=debug is passed, enable debug logging for current package only and accept all info and error logs
-    // Otherwise, only info level logging is enabled
-    let mut env_filter = EnvFilter::from_default_env();
-    if let Ok(level) = std::env::var("RUST_LOG") {
-        if level == "debug" {
-            env_filter = env_filter
-                .add_directive(format!("{}=debug", env!("CARGO_PKG_NAME")).parse().unwrap())
-                .add_directive(LevelFilter::ERROR.into())
-                .add_directive(LevelFilter::INFO.into());
-        }
-    } else {
-        env_filter = env_filter.add_directive(LevelFilter::INFO.into());
-    }
-    let subscriber = tracing_subscriber::fmt()
-        .with_env_filter(env_filter)
-        .finish();
-    tracing::subscriber::set_global_default(subscriber).unwrap();
-
-    // get the bot token from environment
-    let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-
-    let http = Http::new(&token);
-
-    let (owners, _bot_id) = match http.get_current_application_info().await {
-        Ok(info) => {
-            let mut owners = HashSet::new();
-            owners.insert(info.owner.id);
-
-            (owners, info.id)
-        }
-        Err(why) => panic!("Could not access application info: {:?}", why),
-    };
-
-    let framework = StandardFramework::new().configure(|c| c.owners(owners).prefix("!"));
-
-    // allow only two intents to prevent flooding
-    let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
-
-    let mut client = Client::builder(&token, intents)
-        .framework(framework)
-        .event_handler(Handler)
-        .await
-        .expect("Err creating client");
-
-    // initialize the struct data so if we fetch, it does not crash.
-    {
-        let mut data = client.data.write().await;
-        data.insert::<ParsedData>(Arc::new(RwLock::new(HashMap::new())));
-    }
-
-    {
-        let mut data = client.data.write().await;
-        data.insert::<PermissionData>(Arc::new(RwLock::new(HashMap::new())));
-    }
-
-    if let Err(why) = client.start().await {
-        error!("Client error: {:?}", why);
-        std::process::exit(1);
     }
 }
