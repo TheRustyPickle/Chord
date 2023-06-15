@@ -6,12 +6,12 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 use shuttle_secrets::SecretStore;
 use std::collections::{HashMap, HashSet};
-use std::env;
+//use std::env;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::error;
-use tracing_subscriber::filter::LevelFilter;
-use tracing_subscriber::EnvFilter;
+//use tracing_subscriber::filter::LevelFilter;
+//use tracing_subscriber::EnvFilter;
 
 #[shuttle_runtime::main]
 async fn serenity(
@@ -20,7 +20,7 @@ async fn serenity(
     // initialize trace logging
     // if RUST_LOG=debug is passed, enable debug logging for current package only and accept all info and error logs
     // Otherwise, only info level logging is enabled
-    let mut env_filter = EnvFilter::from_default_env();
+    /*let mut env_filter = EnvFilter::from_default_env();
     if let Ok(level) = std::env::var("RUST_LOG") {
         if level == "debug" {
             env_filter = env_filter
@@ -34,7 +34,7 @@ async fn serenity(
     let subscriber = tracing_subscriber::fmt()
         .with_env_filter(env_filter)
         .finish();
-    tracing::subscriber::set_global_default(subscriber).unwrap();
+    //tracing::subscriber::set_global_default(subscriber).unwrap();*/
 
     // get the bot token
     let token = secret_store
