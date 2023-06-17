@@ -6,55 +6,45 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
 }
 
 pub fn run(_options: &[CommandDataOption]) -> String {
-    "**How to use /create command**
-    
-Examples:
+    "**How to Use the /create Command**
 
--cat first category -r members, verified -ch channel-1 -t ann -r admin, verified -ch channel-2 -p
+**Parameters:**
 
--cat third category -r cm, mods, administrator, -p -ch channel-3 -t text -r discord, bots -ch channel-4
-
-Parameters:
-
-**-cat:** Highlights a category
-
-**-r:** Highlights an existing Role/s inside the guild
-
-**-p:** Recognizes a Channel or a Category to be as Private
-
-**-ch:** Highlights a Channel
-
-**-t:** Highlights a Channel type
-
-**-cat:** 
+**-cat:** Specifies the category name
     • Category name can be as long as necessary
+    • Multiple -cat in one command are supported
     • If no -ch is given after -cat, the category will not be created
     • If -p or -r are passed after -cat, any -ch after it will follow the rules of the category
     • Supported values: -r, -p, -ch
-**-ch:**
+
+**-ch:** Specifies the channel name
     • Channel name can be as long as necessary
-    • Use -ch multiple times to create more channels. Example: -ch channel-1 -p -ch another channel
+    • Use -ch multiple times to create more channels. Example: `-ch channel-1 -p -ch another channel`
     • If -ch is placed after -cat, it will follow -cat rules
     • If -cat is not found, it will be created without a category
     • Supported values: -r, -p, -t
-**-r:**
-    • If -r is passed after -ch, it will overwrite -r inside the -cat
+
+**-r:** Specifies one or more roles
+    • If -r is passed after -ch, it will overwrite the roles specified in -cat
     • @everyone as a role can be passed to overwrite -p flag of a -cat
-    • Multiple roles can be given after -r. Must be separated by comma + space. Example: -ch channel -r role 1, role 2, role 3
-**-p:**
+    • Multiple roles can be given after -r. Must be separated by comma and space. Example: `-ch channel -r @everyone, role 2, role 3`
+
+**-p:** Specifies whether the category or channel is private
     • If -p is passed after -cat, the Category will be private
     • If -p is passed after -ch, the Channel will private
     • If -r is passed alongside -p, only the given roles will get access
+
 **-t:**
-    • Should be used after -ch
-    • 'text' = Text channel. Default value
-    • 'voice' = Voice channel
-    • 'ann' = Announcement/News Channel
+    • Can be used after -ch
+    • Values: 'text' for a text channel, 'voice' for a voice channel, 'ann' for an announcement channel
+    • Example: `-ch channel -t voice`
     • If not is passed, defaults to Text channel
 
 **Recommended Steps:**
     • Create the necessary roles before using /create
-    • Line breaks are supported
-    • Divide each category with channels with line breaks to simplify
-    • See /examples to get an idea on how to use".to_string()
+    • Before using the /create, separate each command with a line break for better readability and understanding. 
+    Example:`
+    -cat one ...
+    -cat another ...`
+    • See /examples and try them".to_string()
 }

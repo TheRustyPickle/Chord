@@ -15,7 +15,7 @@ use tracing::{error, info};
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("create")
-        .description("Command for creating channels")
+        .description("Create channels with given command")
         // remove command from working in dm
         .dm_permission(false)
         // add the option to accept a string

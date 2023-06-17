@@ -8,13 +8,18 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
 }
 
 pub fn run(_options: &[CommandDataOption]) -> String {
-    "This bot is intended to create Categories and Channel in a discord guild, fast, using CLI like messages. It should be used as a faster way to create multiple channels and categories using a small message and later modified to the liking and the necessities. It aims to reduce the hassle when creating a guild from the scratch.
+    "Chord is a Discord bot designed to create categories and channels in a guild with a CLI-like command. It is primarily aimed at reducing manual labor when creating multiple channels. 
     
 Following commands are available
     
-**/create:** Accepts a string that is parsed for creating categories and channels
+**/create:** Accepts a command string for creating categories and channels
 **/setup:** Setup permissions for guilds
 **/check_setup:** Shows the permission that was set
-**/help:** Shows how to use this bot and parameters that are recognized
-**/example:** Get some examples of what kind of commands are recognized".to_string()
+**/help:** Shows the parameters that are recognized
+**/example:** Get some examples of what kind of commands are recognized
+
+Source code: <https://github.com/TheRustyPickle/Chord>
+
+Facing any bugs, issues or have a feedback? Create an issue on github.
+".to_string()
 }
