@@ -10,3 +10,4 @@ Cargo.lock
 **/*.rs.bk
 .vscode
 Secrets.toml
+.markdownlint.json
