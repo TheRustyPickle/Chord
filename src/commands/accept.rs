@@ -145,7 +145,7 @@ pub async fn run(
             for (role_id, role) in all_roles.iter() {
                 if ch_roles.contains(&role.name) {
                     channel_roles.push(role_id);
-                    info!("{} role found for channel", role.name);
+                    info!("'{}' role found for channel", role.name);
                 }
             }
         }
@@ -236,7 +236,7 @@ async fn override_permissions_private(
 
 fn do_private(role: &RoleId) -> Vec<PermissionOverwrite> {
     let allow = Permissions::empty();
-    let deny = Permissions::VIEW_CHANNEL;
+    let deny = Permissions::VIEW_CHANNEL | Permissions::CONNECT;
 
     // denies view permission to make a channel or category private
     vec![PermissionOverwrite {
