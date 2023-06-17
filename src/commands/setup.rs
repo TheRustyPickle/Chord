@@ -19,7 +19,11 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
 }
 
 pub fn run(_options: &[CommandDataOption]) -> String {
-    "A series of messages will be sent. Click on the appropriate button for permission confirmation"
+    "The /setup command can be used to quickly set initial permissions for channels and categories when using /create. It serves as a starting point for permissions setup and is intended to be modified later as necessary.
+
+/setup permissions will only apply to the roles pointed or -r param when using /create. 
+
+A series of messages will be sent. Click on the appropriate button for permission setup."
         .to_string()
 }
 
@@ -44,7 +48,7 @@ pub async fn setup(
             .create_followup_message(&ctx.http, |message| {
                 message
                     .content(format!(
-                        "Answer the following question\n\nWhat do you want to do with **{permission}**?"
+                        "What do you want to do with **{permission}**?"
                     ))
                     .components(|c| {
                         c.create_action_row(|row| {
