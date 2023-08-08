@@ -47,21 +47,28 @@ pub async fn setup(
         let followup_mess = command
             .create_followup_message(&ctx.http, |message| {
                 message
-                    .content(format!(
-                        "What do you want to do with **{permission}**?"
-                    ))
+                    .content(format!("What do you want to do with **{permission}**?"))
                     .components(|c| {
                         c.create_action_row(|row| {
                             row.add_button(normal_button("Allow For Public", ButtonStyle::Primary));
                             row.add_button(normal_button("Deny For Public", ButtonStyle::Primary))
                         });
                         c.create_action_row(|row| {
-                            row.add_button(normal_button("Allow For Private", ButtonStyle::Primary));
+                            row.add_button(normal_button(
+                                "Allow For Private",
+                                ButtonStyle::Primary,
+                            ));
                             row.add_button(normal_button("Deny For Private", ButtonStyle::Primary))
                         });
                         c.create_action_row(|row| {
-                            row.add_button(normal_button("Allow Public, Deny Private", ButtonStyle::Primary));
-                            row.add_button(normal_button("Deny Public, Allow Private", ButtonStyle::Primary))
+                            row.add_button(normal_button(
+                                "Allow Public, Deny Private",
+                                ButtonStyle::Primary,
+                            ));
+                            row.add_button(normal_button(
+                                "Deny Public, Allow Private",
+                                ButtonStyle::Primary,
+                            ))
                         });
                         c.create_action_row(|row| {
                             row.add_button(normal_button("Allow For Both", ButtonStyle::Primary));

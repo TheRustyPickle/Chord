@@ -83,7 +83,7 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
     if data.contains_key("channels") {
         full_text.push_str("**Channels:**\n");
         for channel in &data["channels"] {
-            let mut channel_name: String = String::new();
+            let mut channel_name = Vec::new();
 
             // example string: -ch something 1 2 3 -p -r one, two three
             // start from something and continue until -p -r or something is hit
@@ -91,10 +91,11 @@ fn main_text(data: HashMap<&str, Vec<String>>) -> String {
                 if SENSITIVE_STRING.contains(&word) {
                     break;
                 }
-                channel_name.push_str(&format!("{word} "));
+                channel_name.push(word);
             }
 
             // replace channel name so what remains is -p -r one, two three
+            let channel_name = channel_name.join(" ");
             let channel = channel.replace(&channel_name, "").trim().to_string();
             let channel_name = polish_channel(&channel_name);
 
