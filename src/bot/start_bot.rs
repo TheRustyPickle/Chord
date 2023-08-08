@@ -1,5 +1,5 @@
 use crate::utility::{get_guild_name, get_locked_parsedata, handle_error, normal_button};
-use crate::{check_setup, create, example, help, setup, start};
+use crate::{check_setup, copy, create, example, help, setup, start};
 use serenity::async_trait;
 use serenity::model::application::command::Command;
 use serenity::model::application::component::ButtonStyle;
@@ -24,6 +24,7 @@ impl EventHandler for Handler {
                 .create_application_command(|command| example::register(command))
                 .create_application_command(|command| setup::register(command))
                 .create_application_command(|command| check_setup::register(command))
+                .create_application_command(|command| copy::register(command))
         })
         .await;
 
@@ -79,6 +80,7 @@ impl EventHandler for Handler {
                 "check_setup" => {
                     check_setup::run(&command.data.options, &ctx, user_data.id.0).await
                 }
+                "copy" => copy::run(&command.data.options).await,
                 _ => "Command not found".to_string(),
             };
 
@@ -127,6 +129,7 @@ impl EventHandler for Handler {
                     )
                     .await
                 }
+                "copy" => handle_error(&ctx, &command, copy::setup(&command, &ctx).await).await,
                 _ => {}
             }
         }
