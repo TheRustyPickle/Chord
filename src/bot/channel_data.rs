@@ -5,7 +5,7 @@ pub struct ChannelInfo {
     pub channel: String,
     pub roles: Option<Vec<String>>,
     pub channel_type: ChannelType,
-    pub private: Option<bool>,
+    pub private: bool,
 }
 
 impl ChannelInfo {
@@ -15,7 +15,7 @@ impl ChannelInfo {
             channel: String::new(),
             roles: None,
             channel_type: ChannelType::Text,
-            private: None,
+            private: false,
         }
     }
 
@@ -31,11 +31,14 @@ impl ChannelInfo {
     }
 
     pub fn update_private(&mut self) {
-        self.private = Some(true)
+        self.private = true
     }
 
-    pub fn update_name_category(&mut self, name: String, category: Option<CategoryInfo>) {
+    pub fn update_name(&mut self, name: String) {
         self.channel = name;
+    }
+
+    pub fn update_category(&mut self, category: Option<CategoryInfo>) {
         self.category = category;
     }
 
@@ -48,9 +51,20 @@ impl ChannelInfo {
         }
     }
 
+    pub fn update_channel_type_with_type(&mut self, ch_type: ChannelType) {
+        match ch_type {
+            ChannelType::Private => self.update_private(),
+            _ => self.channel_type = ch_type,
+        }
+    }
+
     pub fn get_category_name(&self) -> Option<&str> {
         if let Some(category) = &self.category {
-            Some(&category.category)
+            if category.category.is_empty() {
+                None
+            } else {
+                Some(&category.category)
+            }
         } else {
             None
         }
@@ -83,7 +97,7 @@ pub struct CategoryInfo {
 impl CategoryInfo {
     pub fn new() -> Self {
         CategoryInfo {
-            category: "None".to_string(),
+            category: "".to_string(),
             roles: None,
             private: false,
         }

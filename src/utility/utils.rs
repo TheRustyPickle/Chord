@@ -98,3 +98,21 @@ pub fn get_perm_list<'a>() -> Vec<(&'a str, Permissions)> {
         ("Use Application Commands", Permissions::USE_SLASH_COMMANDS),
     ]
 }
+
+pub async fn get_id_to_channel_name(channel_id: ChannelId, ctx: &Context) -> Option<String> {
+    let channel = match channel_id.to_channel_cached(ctx) {
+        Some(c) => c,
+        None => match channel_id.to_channel(&ctx).await {
+            Ok(c) => c,
+            Err(_) => return None,
+        }, // Channel not found
+    };
+
+    // Check if the channel has a parent
+    if let Some(guild_category) = channel.category() {
+        // Return the name of the category
+        return Some(guild_category.name);
+    }
+
+    None // No valid category found
+}

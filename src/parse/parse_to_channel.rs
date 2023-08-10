@@ -99,7 +99,8 @@ fn get_base_data(data: HashMap<&str, Vec<String>>) -> Result<Vec<ChannelInfo>, &
                     Err(_) => return Err("Could not parse channel"),
                 }
             } else {
-                channel_data.update_name_category(channel_name, category.clone());
+                channel_data.update_name(channel_name);
+                channel_data.update_category(category.clone());
                 all_channels.push(channel_data);
             }
         }

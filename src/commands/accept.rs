@@ -130,7 +130,7 @@ pub async fn run(
 
         // if either the channel or the category is private, make the channel private
         // this also removes all roles if any added to the channel
-        if channel.private.is_some() || channel.get_category_private() {
+        if channel.private || channel.get_category_private() {
             created_channel
                 .id
                 .edit(&ctx.http, |c| {
@@ -151,7 +151,7 @@ pub async fn run(
         }
 
         // send out permission based on whether the channel was selected private or public
-        if channel.private.is_some() || channel.get_category_private() {
+        if channel.private || channel.get_category_private() {
             override_permissions_private(created_channel.id, channel_roles, ctx, &user_id).await?;
         } else {
             override_permissions_public(created_channel.id, channel_roles, ctx, &user_id).await?;
