@@ -8,16 +8,11 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
 tracing = "0.1.23"
-shuttle-serenity = "0.18.0"
-shuttle-runtime = "0.18.0"
-shuttle-secrets = "0.18.0"
+shuttle-serenity = "0.24.0"
+shuttle-runtime = "0.24.0"
+shuttle-secrets = "0.24.0"
 
 [dependencies.serenity]
 default-features = true
 features = ["collector"]
 version = "0.11.5"
-
-[dependencies.tracing-subscriber]
-default-features = true
-version = "0.3.16"
-features = ["env-filter"]
